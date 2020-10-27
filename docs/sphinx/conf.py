@@ -13,6 +13,7 @@ import os
 
 from pkg_resources import parse_version
 
+
 try:
     from fliswarm import __version__
 except ModuleNotFoundError:
@@ -26,9 +27,6 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 # Sphinx template selected in cookiecutter and whether to use releases
 sphinx_template = 'alabaster'
 use_releases = 'yes'
-
-if sphinx_template == 'sphinx-bootstrap':
-    import sphinx_bootstrap_theme
 
 
 # Importing matplotlib here with agg to prevent tkinter error in readthedocs

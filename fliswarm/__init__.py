@@ -1,6 +1,9 @@
 # encoding: utf-8
 
+import logging
+
 from sdsstools import get_config, get_logger, get_package_version
+
 
 # pip package name
 NAME = 'sdss-fliswarm'
@@ -12,6 +15,7 @@ config = get_config('fliswarm')
 # File logging can be started by calling log.start_file_logger(path).  Filename can be different
 # than NAME.
 log = get_logger(NAME)
+log.sh.setLevel(logging.WARNING)
 
 
 # package name should be pip package name
