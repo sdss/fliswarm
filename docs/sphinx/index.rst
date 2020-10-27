@@ -1,6 +1,6 @@
 
 fliswarm's documentation
-=============================================
+========================
 
 This is the documentation for the SDSS Python product fliswarm. The current version is |fliswarm_version|. You can install the package by doing
 

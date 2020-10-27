@@ -13,28 +13,24 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-	"Programming Language :: Python :: 3.6",
 	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
     "Topic :: Documentation :: Sphinx",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [
-    { include = "fliswarm", from = "python" }
+    { include = "fliswarm" }
 ]
-include = ["python/fliswarm/etc/*", "cextern/**/*", "LICENSE.md"]
-build = "build.py"
+include = ["fliswarm/etc/*", "LICENSE.md"]
 
 [tool.poetry.scripts]
-fliswarm = "fliswarm.cli:main"
+fliswarm = "fliswarm.__main__:fliswarm"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-sdss-tree = ">=2.15.2"
-sdss-access = ">=0.2.3"
 sdsstools = ">=0.4.0"
-Sphinx = {version="^3.0.0", optional=true}
-
+click = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
@@ -51,9 +47,7 @@ codecov = ">=2.0.15"
 coverage = {version = ">=5.0", extras = ["toml"]}
 ipdb = ">=0.12.3"
 rstcheck = "^3.3.1"
-
-[tool.poetry.extras]
-docs = ["Sphinx"]
+Sphinx = "^3.0.0"
 
 [tool.isort]
 line_length = 79
@@ -81,5 +75,5 @@ exclude_lines = [
 ]
 
 [build-system]
-build-backend = "poetry.masonry.api"
-requires = ["poetry>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "setuptools>=49.6.0"]
+build-backend = "poetry.core.masonry.api"

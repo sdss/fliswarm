@@ -107,7 +107,7 @@ add_module_names = True
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -139,7 +139,6 @@ rst_epilog = f"""
 # -- Options for HTML output ----------------------------------------------
 
 html_css_files = [
-    'pygments.css'
 ]
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
