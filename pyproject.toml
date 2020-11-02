@@ -25,12 +25,16 @@ packages = [
 include = ["fliswarm/etc/*", "LICENSE.md"]
 
 [tool.poetry.scripts]
-fliswarm = "fliswarm.__main__:fliswarm"
+fliswarm = "fliswarm.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"
 sdsstools = ">=0.4.0"
 click = "^7.1.2"
+docker = "^4.3.1"
+sdss-clu = "^0.5.2"
+click-default-group = "^1.2.2"
+daemonocle = "^1.0.2"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
@@ -48,6 +52,7 @@ coverage = {version = ">=5.0", extras = ["toml"]}
 ipdb = ">=0.12.3"
 rstcheck = "^3.3.1"
 Sphinx = "^3.0.0"
+autopep8 = "^1.5.4"
 
 [tool.isort]
 line_length = 79

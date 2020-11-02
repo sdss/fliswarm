@@ -1,0 +1,65 @@
+actor:
+    name: fliswarm
+    host: 127.0.0.1
+    port: 19996
+    tron_host: sdss-hub
+    tron_port: 6093
+    log_dir: /data/logs/actors/fliswarm
+
+registry: sdss-hub:5000
+image: flicamera:latest
+
+ping_timeout: 0.1
+
+enabled_nucs: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
+
+nucs:
+    gfa1:
+        host: sdss-gfa1
+        port: 19995
+        docker-client: tcp://sdss-gfa1:2375
+        category: gfa
+    gfa2:
+        host: sdss-gfa2
+        port: 19995
+        docker-client: tcp://sdss-gfa2:2375
+        category: gfa
+    gfa3:
+        host: sdss-gfa3
+        port: 19995
+        docker-client: tcp://sdss-gfa3:2375
+        category: gfa
+    gfa4:
+        host: sdss-gfa4
+        port: 19995
+        docker-client: tcp://sdss-gfa4:2375
+        category: gfa
+    gfa5:
+        host: sdss-gfa5
+        port: 19995
+        docker-client: tcp://sdss-gfa5:2375
+        category: gfa
+    gfa6:
+        host: sdss-gfa6
+        port: 19995
+        docker-client: tcp://sdss-gfa6:2375
+        category: gfa
+    fvc:
+        host: sdss-fvc
+        port: 19995
+        docker-client: tcp://sdss-fvc:2375
+        category: fvc
+
+volumes:
+    home:
+        driver: local
+        opts:
+            - type=nfs
+            - o=nfsvers=4,addr=sdss-hub,ro
+            - device=:/home/albireo
+    data:
+        driver: local
+        opts:
+            - type=nfs
+            - o=nfsvers=4,addr=sdss-hub,rw
+            - device=:/data
