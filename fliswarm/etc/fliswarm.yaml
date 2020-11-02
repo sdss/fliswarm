@@ -7,7 +7,9 @@ actor:
     log_dir: /data/logs/actors/fliswarm
 
 registry: sdss-hub:5000
+
 image: flicamera:latest
+container_name: flicamera
 
 ping_timeout: 0.1
 
@@ -54,12 +56,12 @@ volumes:
     home:
         driver: local
         opts:
-            - type=nfs
-            - o=nfsvers=4,addr=sdss-hub,ro
-            - device=:/home/albireo
+            type: nfs
+            o: nfsvers=4,addr=sdss-hub,ro
+            device: :/home/albireo
     data:
         driver: local
         opts:
-            - type=nfs
-            - o=nfsvers=4,addr=sdss-hub,rw
-            - device=:/data
+            type: nfs
+            o: nfsvers=4,addr=sdss-hub,rw
+            device: :/data

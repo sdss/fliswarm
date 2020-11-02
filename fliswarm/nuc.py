@@ -8,7 +8,9 @@
 
 import subprocess
 
-from docker import DockerClient
+from docker import DockerClient, types
+
+from .tools import FakeCommand
 
 
 DEFAULT_DOCKER_PORT = 2375
@@ -71,6 +73,16 @@ class NUC(object):
 
         return True if ping.returncode == 0 else False
 
+    def get_volume(self, name):
+        """Returns the volume that matches the name, if it exists."""
+
+        volumes = self.client.volumes.list()
+
+        for vol in volumes:
+            if vol.name == name:
+                return vol
+        return False
+
     def report_status(self, command, volumes=True, containers=True):
         """Reports the status of the NUC.
 
@@ -120,25 +132,199 @@ class NUC(object):
             image = config['image'].split(':')[0]
 
             containers = self.client.containers.list(
-                filters={'ancestor': image, 'status': 'running'})
-
-            for container in containers:
-                command.debug(container=[self.name, container.short_id])
+                all=True, filters={'ancestor': image, 'status': 'running'})
 
             if len(containers) == 0:
                 command.error(text=f'No containers running on {self.host}.')
+                command.debug(container=[self.name, 'NA'])
             elif len(containers) > 1:
-                command.error(text=f'Multiple containes with image {image} '
+                command.error(text=f'Multiple containers with image {image} '
                                    f'running on host {self.host}.')
+                command.debug(container=[self.name, 'NA'])
+            else:
+                command.debug(container=[self.name, containers[0].short_id])
 
         if volumes:
             volumes = self.client.volumes.list()
             for vname in config['volumes']:
-                if vname not in [v.name for v in volumes]:
+                volume = self.get_volume(vname)
+                if volume is False:
                     command.error(text=f'Volume {vname} not present '
                                        f'in {self.name}.')
                     command.debug(volume=[self.name, vname, False, 'NA'])
                     continue
-                volume = [v for v in volumes if v.name == vname][0]
                 command.debug(volume=[self.name, vname, True,
                                       volume.attrs['Options']['device']])
+
+    def run_container(self, name, image, volumes=[], privileged=False,
+                      registry=None, envs={}, ports=[], force=False,
+                      command=None):
+        """Runs a container in the NUC, in detached mode.
+
+        name : str
+            The name to assign to the container.
+        image : str
+            The image to run.
+        volumes : list
+            Names of the volumes to mount. The mount point in the container
+            will match the original device. The volumes must already exist
+            in the NUC.
+        privileged : bool
+            Whether to run the container in privileged mode.
+        registry : bool
+            The registry from which to pull the image, if it doesn't exist
+            locally.
+        envs : dict
+            A dictionary of environment variable to value to pass to the
+            container.
+        ports : dict or list
+            Ports to bind inside the container. The format must be
+            ``{'2222/tcp': 3333}`` which will expose port 2222 inside the
+            container as port 3333 on the host. Also accepted is a list of
+            integers; each integer port will be exposed in the container
+            and bound to the same port in the host.
+        force : bool
+            If `True`, removes any running containers of the same name,
+            or any container with the same image as ancestor.
+        command : ~clu.command.Command
+            A command to which output messages.
+
+        Returns
+        -------
+        The container object.
+
+        """
+
+        # This is the command in general we aim to run.
+        # docker --context gfa1 run
+        # --rm -d -p 19995:19995
+        # --mount source=data,target=/data
+        # --mount source=home,target=/home/sdss
+        # --env OBSERVATORY=APO --env ACTOR_NAME=gfa
+        # --privileged
+        # sdss-hub:5000/flicamera:latest
+
+        command = command or FakeCommand()
+
+        base_image = image.split(':')[0]
+
+        # Silently remove any exited containers that match the name or image
+        # TODO: In the future we may want to restart them instead.
+        exited_containers = self.client.containers.list(
+            all=True, filters={'name': name, 'status': 'exited'})
+        exited_containers += self.client.containers.list(
+            all=True, filters={'ancestor': base_image, 'status': 'exited'})
+
+        if len(exited_containers) > 0:
+            map(lambda c: c.remove(v=False, force=True))
+
+        # Now check for running containers.
+        ancestor_containers = self.client.containers.list(
+            all=True, filters={'ancestor': base_image, 'status': 'running'})
+        if len(ancestor_containers) > 0:
+            for container in ancestor_containers:
+                if container.name != name:
+                    command.warning(
+                        text=f'{self.name}: removing container '
+                             f'({container.name}, {container.short_id}) '
+                             f'that uses image {base_image}.')
+                    container.remove(v=False, force=True)
+
+        name_containers = self.client.containers.list(
+            all=True, filters={'name': name, 'status': 'running'})
+        if len(name_containers) > 0:
+            container = name_containers[0]
+            if force is False:
+                command.debug(text=f'{self.name}: container already running.')
+                command.debug(container=[self.name, container.short_id])
+                return
+            else:
+                command.warning(text=f'{self.name}: container with name '
+                                     f'{name} already running. Removing it.')
+                container.remove(v=False, force=True)
+                command.debug(container=[self.name, 'NA'])
+
+        # If we are here there should be no container named as the container
+        # we can to create. We can go ahead and create it.
+
+        if registry:
+            image = registry + '/' + image
+
+        if isinstance(ports, (list, tuple)):
+            ports = {f'{port}/tcp': port for port in ports}
+
+        mounts = []
+        for vname in volumes:
+            volume = self.client.volumes.get(vname)
+            target = volume.attrs['Options']['device'].strip(':')
+            mounts.append(types.Mount(target, vname))
+
+        command.debug(text=f'{self.name}: pulling latest image.')
+        self.client.images.pull(image)
+
+        command.info(text=f'{self.name}: running {name} from {image}.')
+        container = self.client.containers.run(image,
+                                               name=name,
+                                               detach=True,
+                                               remove=True,
+                                               environment=envs,
+                                               ports=ports,
+                                               privileged=privileged,
+                                               mounts=mounts)
+
+        return container
+
+    def create_volume(self, name, driver='local', opts={}, force=False,
+                      command=None):
+        """Creates a volume in the NUC Docker.
+
+        Parameters
+        ----------
+        name : str
+            The name of the volume to create.
+        driver : str
+            The driver to use.
+        opts : dict
+            A dict of key-values with the options to pass to the volume when
+            creating it.
+        force : bool
+            If `True`, and the volume already exists, removes it and
+            creates it anew.
+        command : ~clu.command.Command
+            A command to which output messages.
+
+        Returns
+        -------
+        The volume object.
+
+        Examples
+        --------
+        To create an NFS volume pointing to ``/data`` on ``sdss-hub`` ::
+
+            nuc.create_volume('data', driver='local'
+                              opts=['type=nfs',
+                                    'o=nfsvers=4,addr=sdss-hub,rw',
+                                    'device=:/data'])
+
+        """
+
+        command = command or FakeCommand()
+
+        volume = self.get_volume(name)
+        if volume is not False:
+            if not force:
+                command.debug(text=f'{self.name}: volume {name} '
+                              'already exists.')
+                return
+            command.warning(text=f'{self.name}: recreating existing '
+                            f'volume {name}.')
+            volume.remove(force=True)
+
+        volume = self.client.volumes.create(name, driver=driver,
+                                            driver_opts=opts)
+
+        command.debug(text=f'{self.name}: creating volume {name}.')
+        command.debug(volume=[self.name, name, True,
+                              volume.attrs['Options']['device']])
+
+        return

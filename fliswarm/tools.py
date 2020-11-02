@@ -6,7 +6,7 @@
 # @Filename: tools.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-__all__ = ['select_nucs']
+__all__ = ['select_nucs', 'FakeCommand']
 
 
 def select_nucs(nucs, category=None, names=None):
@@ -45,3 +45,12 @@ def select_nucs(nucs, category=None, names=None):
         valid_nucs |= set(nucs)
 
     return valid_nucs
+
+
+class FakeCommand:
+    """A fake `~clu.command.Command` object that doesn't do anything."""
+
+    def __getattr__(self, item):
+        def fake_method(*args, **kwargs):
+            pass
+        return fake_method
