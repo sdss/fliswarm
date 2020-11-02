@@ -1,6 +1,6 @@
 # fliswarm
 
-![Versions](https://img.shields.io/badge/python->3.7-blue)
+![Versions](https://img.shields.io/badge/python->3.8-blue)
 [![Documentation Status](https://readthedocs.org/projects/sdss-fliswarm/badge/?version=latest)](https://sdss-fliswarm.readthedocs.io/en/latest/?badge=latest)
 [![Build](https://img.shields.io/github/workflow/status/sdss/fliswarm/Test)](https://github.com/sdss/fliswarm/actions)
 [![codecov](https://codecov.io/gh/sdss/fliswarm/branch/master/graph/badge.svg)](https://codecov.io/gh/sdss/fliswarm)
