@@ -4,12 +4,19 @@
 fliswarm Reference
 ==================
 
-.. _api-main:
+NUC
+---
 
-Main
-----
+.. automodule:: fliswarm.nuc
+   :members: NUC
+   :undoc-members:
+   :show-inheritance:
 
-.. automodule:: fliswarm.main
+
+Tools
+-----
+
+.. automodule:: fliswarm.tools
    :members:
    :undoc-members:
    :show-inheritance:

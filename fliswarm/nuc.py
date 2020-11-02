@@ -84,8 +84,8 @@ class NUC(object):
             Whether to report the containers running. Only reports running
             containers whose ancestor matches the ``config['image']``.
 
-        Returns
-        -------
+        Notes
+        -----
         Outputs the ``nuc`` keyword, with format
         ``NUC={nuc_name, host, daemon_addr, nuc_alive, docker_alive}``.
         If ``containers=True``, outputs the ``container`` keyword with
