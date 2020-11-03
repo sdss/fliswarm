@@ -102,17 +102,25 @@ class FLISwarmActor(LegacyActor):
         self.connect_nucs()
 
         for nuc in self.nucs:
+
             self.flicameras[nuc.name] = FlicameraDevice(
                 nuc.host, self.config['nucs'][nuc.name]['port'], self)
 
-            try:
-                await self.flicameras[nuc.name].start()
-            except OSError:
-                pass
+            if nuc.is_container_running(self.get_container_name(nuc)):
+                try:
+                    await self.flicameras[nuc.name].start()
+                except OSError:
+                    self.write('e', text=f'{nuc.name}: failed to connect to '
+                                         f'the flicamera device.')
 
         self.parser_args = [self.nucs]
 
         return await super().start()
+
+    def get_container_name(self, nuc):
+        """Returns the name of the container for a NUC."""
+
+        return self.config['container_name'] + f'-{nuc.name}'
 
 
 @command_parser.command()
@@ -166,7 +174,7 @@ async def reconnect(command, nucs, names, category, force):
                               force=force,
                               command=command)
 
-        return nuc.run_container(config['container_name'] + f'-{nuc.name}',
+        return nuc.run_container(actor.get_container_name(nuc),
                                  config['image'],
                                  volumes=list(config['volumes']),
                                  privileged=True,
@@ -204,6 +212,7 @@ async def reconnect(command, nucs, names, category, force):
 
         if device.is_connected():
             port = device.port
+            nuc.report_status(command)
             command.debug(text=f'{nuc.name}: reconnected to '
                                f'device on port {port}.')
         else:
