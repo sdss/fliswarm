@@ -169,7 +169,7 @@ class NUC(object):
                                       volume.attrs['Options']['device']])
 
     def stop_container(self, name, image, force=False, command=None):
-        """Stops the container.
+        """Stops and removes the container.
 
         Parameters
         ----------
@@ -178,8 +178,8 @@ class NUC(object):
         image : str
             The image to run.
         force : bool
-            If `True`, removes any running containers of the same name,
-            or any container with the same image as ancestor.
+            If `True`, removes any stopped containers of the same name or
+            with the same image as ancestor.
         command : ~clu.command.Command
             A command to which output messages.
 
@@ -193,37 +193,28 @@ class NUC(object):
         # TODO: In the future we may want to restart them instead.
         exited_containers = self.client.containers.list(
             all=True, filters={'name': name, 'status': 'exited'})
-        exited_containers += self.client.containers.list(
-            all=True, filters={'ancestor': base_image, 'status': 'exited'})
 
         if len(exited_containers) > 0:
             map(lambda c: c.remove(v=False, force=True))
 
-        # Now check for running containers.
-        ancestor_containers = self.client.containers.list(
-            all=True, filters={'ancestor': base_image, 'status': 'running'})
-        if len(ancestor_containers) > 0:
-            for container in ancestor_containers:
-                if container.name != name:
-                    command.warning(
-                        text=f'{self.name}: removing container '
-                             f'({container.name}, {container.short_id}) '
-                             f'that uses image {base_image}.')
-                    container.remove(v=False, force=True)
+        if force:
+            ancestors = self.client.containers.list(
+                all=True, filters={'ancestor': base_image})
+            for container in ancestors:
+                command.warning(
+                    text=f'{self.name}: removing container '
+                         f'({container.name}, {container.short_id}) '
+                         f'that uses image {base_image}.')
+                container.remove(v=False, force=True)
 
         name_containers = self.client.containers.list(
             all=True, filters={'name': name, 'status': 'running'})
         if len(name_containers) > 0:
             container = name_containers[0]
-            if force is False:
-                command.debug(text=f'{self.name}: container already running.')
-                command.debug(container=[self.name, container.short_id])
-                return
-            else:
-                command.warning(text=f'{self.name}: container with name '
-                                     f'{name} already running. Removing it.')
-                container.remove(v=False, force=True)
-                command.debug(container=[self.name, 'NA'])
+            command.warning(text=f'{self.name}: removing running '
+                                 f'container {name}.')
+            container.remove(v=False, force=True)
+            command.debug(container=[self.name, 'NA'])
 
     def run_container(self, name, image, volumes=[], privileged=False,
                       registry=None, envs={}, ports=[], force=False,
@@ -268,18 +259,20 @@ class NUC(object):
 
         # This is the command in general we aim to run.
         # docker --context gfa1 run
-        # --rm -d -p 19995:19995
-        # --mount source=data,target=/data
-        # --mount source=home,target=/home/sdss
-        # --env OBSERVATORY=APO --env ACTOR_NAME=gfa
-        # --privileged
-        # sdss-hub:5000/flicamera:latest
+        #        --rm -d -p 19995:19995
+        #        --mount source=data,target=/data
+        #        --mount source=home,target=/home/sdss
+        #        --env OBSERVATORY=APO --env ACTOR_NAME=gfa
+        #        --privileged
+        #        sdss-hub:5000/flicamera:latest
 
         command = command or FakeCommand()
 
-        self.stop_container(name, image, force=force, command=command)
         if self.is_container_running(name) and not force:
+            command.debug(text=f'{self.name}: container already running.')
             return
+
+        self.stop_container(name, image, force=force, command=command)
 
         if registry:
             image = registry + '/' + image
