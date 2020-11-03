@@ -64,6 +64,20 @@ class NUC(object):
 
         return self.ping() and self.client and self.client.ping()
 
+    def is_container_running(self, name):
+        """Returns `True` if the container is running."""
+
+        if not self.client:
+            return False
+
+        containers = self.client.containers.list(
+            filters={'name': name, 'status': 'running'})
+
+        if len(containers) == 1:
+            return True
+
+        return False
+
     def ping(self, timeout=0.1):
         """Pings the NUC host. Returns `True` if the host is responding."""
 
@@ -156,11 +170,70 @@ class NUC(object):
                 command.debug(volume=[self.name, vname, True,
                                       volume.attrs['Options']['device']])
 
+    def stop_container(self, name, image, force=False, command=None):
+        """Stops the container.
+
+        Parameters
+        ----------
+        name : str
+            The name to assign to the container.
+        image : str
+            The image to run.
+        force : bool
+            If `True`, removes any running containers of the same name,
+            or any container with the same image as ancestor.
+        command : ~clu.command.Command
+            A command to which output messages.
+
+        """
+
+        command = command or FakeCommand()
+
+        base_image = image.split(':')[0]
+
+        # Silently remove any exited containers that match the name or image
+        # TODO: In the future we may want to restart them instead.
+        exited_containers = self.client.containers.list(
+            all=True, filters={'name': name, 'status': 'exited'})
+        exited_containers += self.client.containers.list(
+            all=True, filters={'ancestor': base_image, 'status': 'exited'})
+
+        if len(exited_containers) > 0:
+            map(lambda c: c.remove(v=False, force=True))
+
+        # Now check for running containers.
+        ancestor_containers = self.client.containers.list(
+            all=True, filters={'ancestor': base_image, 'status': 'running'})
+        if len(ancestor_containers) > 0:
+            for container in ancestor_containers:
+                if container.name != name:
+                    command.warning(
+                        text=f'{self.name}: removing container '
+                             f'({container.name}, {container.short_id}) '
+                             f'that uses image {base_image}.')
+                    container.remove(v=False, force=True)
+
+        name_containers = self.client.containers.list(
+            all=True, filters={'name': name, 'status': 'running'})
+        if len(name_containers) > 0:
+            container = name_containers[0]
+            if force is False:
+                command.debug(text=f'{self.name}: container already running.')
+                command.debug(container=[self.name, container.short_id])
+                return
+            else:
+                command.warning(text=f'{self.name}: container with name '
+                                     f'{name} already running. Removing it.')
+                container.remove(v=False, force=True)
+                command.debug(container=[self.name, 'NA'])
+
     def run_container(self, name, image, volumes=[], privileged=False,
                       registry=None, envs={}, ports=[], force=False,
                       command=None):
         """Runs a container in the NUC, in detached mode.
 
+        Parameters
+        ----------
         name : str
             The name to assign to the container.
         image : str
@@ -206,52 +279,15 @@ class NUC(object):
 
         command = command or FakeCommand()
 
-        base_image = image.split(':')[0]
-
-        # Silently remove any exited containers that match the name or image
-        # TODO: In the future we may want to restart them instead.
-        exited_containers = self.client.containers.list(
-            all=True, filters={'name': name, 'status': 'exited'})
-        exited_containers += self.client.containers.list(
-            all=True, filters={'ancestor': base_image, 'status': 'exited'})
-
-        if len(exited_containers) > 0:
-            map(lambda c: c.remove(v=False, force=True))
-
-        # Now check for running containers.
-        ancestor_containers = self.client.containers.list(
-            all=True, filters={'ancestor': base_image, 'status': 'running'})
-        if len(ancestor_containers) > 0:
-            for container in ancestor_containers:
-                if container.name != name:
-                    command.warning(
-                        text=f'{self.name}: removing container '
-                             f'({container.name}, {container.short_id}) '
-                             f'that uses image {base_image}.')
-                    container.remove(v=False, force=True)
-
-        name_containers = self.client.containers.list(
-            all=True, filters={'name': name, 'status': 'running'})
-        if len(name_containers) > 0:
-            container = name_containers[0]
-            if force is False:
-                command.debug(text=f'{self.name}: container already running.')
-                command.debug(container=[self.name, container.short_id])
-                return
-            else:
-                command.warning(text=f'{self.name}: container with name '
-                                     f'{name} already running. Removing it.')
-                container.remove(v=False, force=True)
-                command.debug(container=[self.name, 'NA'])
-
-        # If we are here there should be no container named as the container
-        # we can to create. We can go ahead and create it.
+        self.stop_container(name, image, force=force, command=command)
+        if self.is_container_running(name) and not force:
+            return
 
         if registry:
             image = registry + '/' + image
 
         if isinstance(ports, (list, tuple)):
-            ports = {f'{port}/tcp': port for port in ports}
+            ports = {f'{port}/tcp': ('0.0.0.0', port) for port in ports}
 
         mounts = []
         for vname in volumes:
@@ -265,12 +301,15 @@ class NUC(object):
         command.info(text=f'{self.name}: running {name} from {image}.')
         container = self.client.containers.run(image,
                                                name=name,
+                                               tty=False,
                                                detach=True,
                                                remove=True,
                                                environment=envs,
                                                ports=ports,
                                                privileged=privileged,
-                                               mounts=mounts)
+                                               mounts=mounts,
+                                               stdin_open=False,
+                                               stdout=False)
 
         return container
 
