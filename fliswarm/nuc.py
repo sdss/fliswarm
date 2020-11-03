@@ -142,9 +142,7 @@ class NUC(object):
         command.info(NUC=status)
 
         if containers:
-
-            image = config['image'].split(':')[0]
-
+            image = config['registry'] + '/' + config['image'].split(':')[0]
             containers = self.client.containers.list(
                 all=True, filters={'ancestor': image, 'status': 'running'})
 
