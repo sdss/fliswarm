@@ -50,6 +50,8 @@ class NUC(object):
         self.registry = registry
         self.client = None
 
+        self.enabled = True
+
     def connect(self):
         """Connects to the Docker client on the remote host."""
 
@@ -62,7 +64,8 @@ class NUC(object):
     def connected(self):
         """Returns `True` if the NUC and the Docker client are connected."""
 
-        return self.ping() and self.client and self.client.ping()
+        return (self.enabled and self.ping() and
+                self.client and self.client.ping())
 
     def is_container_running(self, name):
         """Returns `True` if the container is running."""
@@ -126,15 +129,15 @@ class NUC(object):
         config = command.actor.config
 
         if not self.ping(timeout=config['ping_timeout']):
-            command.error(text=f'Host {self.host} is not pinging back.')
+            command.warning(text=f'Host {self.host} is not pinging back.')
             command.info(NUC=status)
             return
 
         status[3] = True  # The NUC is responding.
 
         if not self.client or not self.client.ping():
-            command.error(text=f'Docker client on host {self.host} '
-                               'is not connected.')
+            command.warning(text=f'Docker client on host {self.host} '
+                                 'is not connected.')
             command.info(NUC=status)
             return
 
@@ -147,11 +150,11 @@ class NUC(object):
                 all=True, filters={'ancestor': image, 'status': 'running'})
 
             if len(containers) == 0:
-                command.error(text=f'No containers running on {self.host}.')
+                command.warning(text=f'No containers running on {self.host}.')
                 command.debug(container=[self.name, 'NA'])
             elif len(containers) > 1:
-                command.error(text=f'Multiple containers with image {image} '
-                                   f'running on host {self.host}.')
+                command.warning(text=f'Multiple containers with image {image} '
+                                     f'running on host {self.host}.')
                 command.debug(container=[self.name, 'NA'])
             else:
                 command.debug(container=[self.name, containers[0].short_id])
@@ -161,8 +164,8 @@ class NUC(object):
             for vname in config['volumes']:
                 volume = self.get_volume(vname)
                 if volume is False:
-                    command.error(text=f'Volume {vname} not present '
-                                       f'in {self.name}.')
+                    command.warning(text=f'Volume {vname} not present '
+                                         f'in {self.name}.')
                     command.debug(volume=[self.name, vname, False, 'NA'])
                     continue
                 command.debug(volume=[self.name, vname, True,

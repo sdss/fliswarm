@@ -11,13 +11,15 @@ import json
 import os
 
 import click
+from clu import Command
 from clu.device import Device
 from clu.legacy import LegacyActor
 from clu.parser import command_parser
+from clu.tools import CommandStatus
 
 from . import __version__
 from .nuc import NUC
-from .tools import select_nucs
+from .tools import IDPool, select_nucs
 
 
 class FlicameraDevice(Device):
@@ -26,6 +28,9 @@ class FlicameraDevice(Device):
     def __init__(self, host, port, fliswarm_actor):
 
         self.fliswarm_actor = fliswarm_actor
+        self.id_pool = IDPool()
+
+        self.running_commands = {}
 
         super().__init__(host, port)
 
@@ -35,6 +40,22 @@ class FlicameraDevice(Device):
         if self._client:
             await self.stop()
         await self.start()
+
+    def send_message(self, parent_command, message, command_id=None):
+        """Sends a message to the device."""
+
+        if not self.is_connected():
+            raise OSError('Device is not connected')
+
+        command_id = command_id or self.id_pool.get()
+
+        dev_command = Command(message, command_id=command_id,
+                              parent=parent_command)
+        self.running_commands[command_id] = dev_command
+
+        self.write(f'{command_id} {message}')
+
+        return dev_command
 
     async def process_message(self, line):
         """Receives a message from flicamera and outputs it in fliswarm."""
@@ -46,16 +67,20 @@ class FlicameraDevice(Device):
 
         if 'header' not in message or message['header'] == {}:
             return
-        if 'data' not in message or message['data'] == {}:
-            return
 
         sender = message['header']['sender']
-        message_code = message['header']['message_code']
+        command_id = message['header']['command_id']
+        dev_command_message_code = message['header']['message_code']
 
-        if message_code == '>':
+        # We don't want to output running or done/failed message codes,
+        # but we want to keep the original message code to update the status
+        # of the device command.
+        if dev_command_message_code == '>':
             message_code = 'd'
-        elif message_code == 'f':
-            message_code = 'e'
+        elif dev_command_message_code in ['f', 'e']:
+            message_code = 'w'
+        else:
+            message_code = dev_command_message_code
 
         data = message['data']
         for key in data:
@@ -63,7 +88,28 @@ class FlicameraDevice(Device):
                 data[key] = [data[key]]
             data[key] = [sender] + data[key]
 
-        self.fliswarm_actor.write(message_code, data, broadcast=True)
+        if command_id in self.running_commands:
+
+            # If the message has keywords, output them but using the
+            # modified message code.
+            dev_command = self.running_commands[command_id]
+            if len(data) > 0:
+                dev_command.write(message_code, data)
+
+            # Update the device command with the real message code of the
+            # received message. Do it with silent=True to avoid CLU
+            # informing about the change in status.
+            status = CommandStatus.code_to_status(dev_command_message_code)
+            dev_command.set_status(status, silent=True)
+
+            # If the command is done, return the command_id to the pool.
+            if dev_command.status.is_done:
+                self.running_commands.pop(command_id)
+                self.id_pool.put(command_id)
+
+        else:  # This should not happen, but https://xkcd.com/2200/.
+            if len(data) > 0:
+                self.fliswarm_actor.write(message_code, data, broadcast=True)
 
 
 class FLISwarmActor(LegacyActor):
@@ -77,7 +123,7 @@ class FLISwarmActor(LegacyActor):
 
         self.observatory = os.environ['OBSERVATORY']
 
-        self.nucs = []
+        self.nucs = {}
         self.flicameras = {}
 
     def connect_nucs(self):
@@ -85,12 +131,12 @@ class FLISwarmActor(LegacyActor):
 
         nuc_config = self.config['nucs']
 
-        self.nucs = [NUC(name, nuc_config[name]['host'],
-                         daemon_addr=nuc_config[name]['docker-client'],
-                         category=nuc_config[name].get('category', None))
-                     for name in self.config['enabled_nucs']]
+        self.nucs = {name: NUC(name, nuc_config[name]['host'],
+                               daemon_addr=nuc_config[name]['docker-client'],
+                               category=nuc_config[name].get('category', None))
+                     for name in self.config['enabled_nucs']}
 
-        for nuc in self.nucs:
+        for nuc in self.nucs.values():
             try:
                 nuc.connect()
             except BaseException:
@@ -101,7 +147,7 @@ class FLISwarmActor(LegacyActor):
 
         self.connect_nucs()
 
-        for nuc in self.nucs:
+        for nuc in self.nucs.values():
 
             self.flicameras[nuc.name] = FlicameraDevice(
                 nuc.host, self.config['nucs'][nuc.name]['port'], self)
@@ -110,7 +156,7 @@ class FLISwarmActor(LegacyActor):
                 try:
                     await self.flicameras[nuc.name].start()
                 except OSError:
-                    self.write('e', text=f'{nuc.name}: failed to connect to '
+                    self.write('w', text=f'{nuc.name}: failed to connect to '
                                          f'the flicamera device.')
 
         self.parser_args = [self.nucs]
@@ -127,9 +173,10 @@ class FLISwarmActor(LegacyActor):
 async def status(command, nucs):
     """Outputs the status of the NUCs and containers."""
 
-    command.info(enabledNUCs=[nuc.name for nuc in nucs])
+    enabled_nucs = [nuc for nuc in nucs.values() if nuc.enabled]
+    command.info(enabledNUCs=[nuc.name for nuc in enabled_nucs])
 
-    for nuc in nucs:
+    for nuc in enabled_nucs:
         nuc.report_status(command)
 
     command.finish()
@@ -154,9 +201,9 @@ async def reconnect(command, nucs, names, category, force):
 
         if not nuc.connected:
             nuc.report_status(command)
-            command.error(text=f'NUC {nuc.name} is not pinging back or '
-                               'the Docker daemon is not running. Try '
-                               'rebooting the computer.')
+            command.warning(text=f'NUC {nuc.name} is not pinging back or '
+                                 'the Docker daemon is not running. Try '
+                                 'rebooting the computer.')
             return
 
         # Stop container first, because we cannot remove volumes that are
@@ -185,23 +232,24 @@ async def reconnect(command, nucs, names, category, force):
                                  force=force,
                                  command=command)
 
-    reconnect_nucs = select_nucs(nucs, category, names)
+    c_nucs = select_nucs(nucs, category, names)
 
     # Drop the device before doing anything with the containers, or we'll
     # get weird hangups.
-    for nuc in reconnect_nucs:
-        device = command.actor.flicameras[nuc.name]
+    for nuc in c_nucs:
+        nuc_name = nuc.name
+        device = command.actor.flicameras[nuc_name]
         if device.is_connected():
             await device.stop()
 
     loop = asyncio.get_event_loop()
     await asyncio.gather(*[loop.run_in_executor(None, reconnect_nuc, nuc)
-                           for nuc in reconnect_nucs])
+                           for nuc in c_nucs])
 
     command.info(text='Waiting 5 seconds before reconnecting the devices ...')
     await asyncio.sleep(5)
 
-    for nuc in reconnect_nucs:
+    for nuc in c_nucs:
 
         container_name = config['container_name'] + f'-{nuc.name}'
         if not nuc.is_container_running(container_name):
@@ -217,5 +265,78 @@ async def reconnect(command, nucs, names, category, force):
                                f'device on port {port}.')
         else:
             command.warning(text=f'{nuc.name}: failed to connect to device.')
+
+    command.finish()
+
+
+@command_parser.command()
+@click.argument('CAMERA-COMMAND', nargs=-1, type=str)
+@click.option('--names', '-n', type=str,
+              help='Comma-separated cameras to command.')
+@click.option('--category', '-c', type=str,
+              help='Category of cameras to talk to (gfa, fvc).')
+async def talk(command, nucs, camera_command, names, category):
+    """Sends a command to selected or all cameras."""
+
+    camera_command = ' '.join(camera_command)
+
+    c_nucs = select_nucs(nucs, category, names)
+    names = [nuc.name for nuc in c_nucs]
+
+    flicameras = command.actor.flicameras
+
+    for name in names:
+        if flicameras[name].is_connected():
+            continue
+        command.warning(text=f'Reconnecting to {name} ...')
+        try:
+            await flicameras[name].restart()
+        except OSError:
+            command.fail(text=f'Unable to connect to {name}.')
+            return
+
+    dev_commands = []
+
+    for name in names:
+        dev_commands.append(flicameras[name].send_message(command,
+                                                          camera_command))
+
+    await asyncio.gather(*dev_commands, return_exceptions=True)
+
+    command.finish()
+
+
+@command_parser.command()
+@click.argument('CAMERA-NAMES', nargs=-1, type=str)
+@click.option('-a', '--all', is_flag=True, help='Disable all NUCs/cameras.')
+async def disable(command, nucs, camera_names, all):
+    """Disables one or multiple cameras/NUCs."""
+
+    if all is True:
+        camera_names = list(nucs)
+
+    for name in camera_names:
+        if name not in nucs:
+            command.warning(text=f'Cannot find NUC/camera {name}.')
+            continue
+        nucs[name].enabled = False
+
+    command.finish()
+
+
+@command_parser.command()
+@click.argument('CAMERA-NAMES', nargs=-1, type=str)
+@click.option('-a', '--all', is_flag=True, help='Enable all NUCs/cameras.')
+async def enable(command, nucs, camera_names, all):
+    """Enables one or multiple cameras/NUCs."""
+
+    if all is True:
+        camera_names = list(nucs)
+
+    for name in camera_names:
+        if name not in nucs:
+            command.warning(text=f'Cannot find NUC/camera {name}.')
+            continue
+        nucs[name].enabled = True
 
     command.finish()
