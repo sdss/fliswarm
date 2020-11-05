@@ -152,7 +152,8 @@ class FLISwarmActor(LegacyActor):
         for nuc in self.nucs.values():
 
             self.flicameras[nuc.name] = FlicameraDevice(
-                nuc.host, self.config['nucs'][nuc.name]['port'], self)
+                nuc.name, nuc.host,
+                self.config['nucs'][nuc.name]['port'], self)
 
             if nuc.is_container_running(self.get_container_name(nuc)):
                 try:
