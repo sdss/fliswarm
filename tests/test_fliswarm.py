@@ -86,4 +86,4 @@ async def test_talk_status(actor):
 async def test_reconnect(actor):
 
     command = await actor.invoke_mock_command('reconnect --force')
-    assert command.status.failed
+    assert command.status.did_succeed
