@@ -13,4 +13,4 @@ import pytest
 def mock_docker(mocker):
     """Mock the docker Python module."""
 
-    yield mocker.patch('docker.DockerClient')
+    yield mocker.patch('fliswarm.nuc.DockerClient')

@@ -55,9 +55,9 @@ class NUC(object):
     def connect(self):
         """Connects to the Docker client on the remote host."""
 
-        if not self.ping():
-            raise ConnectionError(f'Host {self.host} is not responding.')
-
+        # if not self.ping():
+        #     raise ConnectionError(f'Host {self.host} is not responding.')
+        print(DockerClient)
         self.client = DockerClient(self.daemon_addr, timeout=1)
 
     @property

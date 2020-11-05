@@ -11,7 +11,7 @@ from fliswarm.nuc import NUC
 
 def test_nuc(mock_docker):
 
-    nuc = NUC('test-nuc', '127.0.0.1')
+    nuc = NUC('test-nuc', 'fake-ip')
     nuc.connect()
 
     assert nuc.client is not None
