@@ -5,11 +5,11 @@
 [![Build](https://img.shields.io/github/workflow/status/sdss/fliswarm/Test)](https://github.com/sdss/fliswarm/actions)
 [![codecov](https://codecov.io/gh/sdss/fliswarm/branch/main/graph/badge.svg)](https://codecov.io/gh/sdss/fliswarm)
 
-A tool to create and manage Docker instances of [fliswarm](https://github.org/sdss/fliswarm).
+A tool to create and manage Docker instances of [flicamera](https://github.org/sdss/flicamera).
 
 ## Installation
 
-In general you should be able to install ``fliswarm`` by doing
+You can install ``fliswarm`` by doing
 
 ```console
 pip install sdss-fliswarm
@@ -34,7 +34,7 @@ poetry install
 Pip does not support editable installs with PEP-517 yet. That means that running `pip install -e .` will fail because `poetry` doesn't use a `setup.py` file. As a workaround, you can use the `create_setup.py` file to generate a temporary `setup.py` file. To install `fliswarm` in editable mode without `poetry`, do
 
 ```console
-pip install --pre poetry
+pip install poetry
 python create_setup.py
 pip install -e .
 ```
