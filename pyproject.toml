@@ -73,6 +73,7 @@ branch = true
 include = ["python/fliswarm/*"]
 omit = [
     "*/__init__.py",
+    "*/__main__.py"
 ]
 
 [tool.coverage.report]
