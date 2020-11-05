@@ -77,6 +77,8 @@ class FlicameraDevice(Device):
         # of the device command.
         if dev_command_message_code == '>':
             message_code = 'd'
+        elif dev_command_message_code == ':':
+            message_code = 'i'
         elif dev_command_message_code in ['f', 'e']:
             message_code = 'w'
         else:
