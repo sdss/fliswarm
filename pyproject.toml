@@ -67,6 +67,9 @@ use_parentheses = true
 
 [tool.pytest.ini_options]
 addopts = "--cov fliswarm --cov-report xml --cov-report html --cov-report term"
+filterwarnings = [
+    "ignore:starting LegacyActor without Tron connection."
+]
 
 [tool.coverage.run]
 branch = true

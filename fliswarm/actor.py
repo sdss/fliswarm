@@ -25,8 +25,9 @@ from .tools import IDPool, select_nucs
 class FlicameraDevice(Device):
     """A device to handle the connection to a flicamera actor and camera."""
 
-    def __init__(self, host, port, fliswarm_actor):
+    def __init__(self, name, host, port, fliswarm_actor):
 
+        self.name = name
         self.fliswarm_actor = fliswarm_actor
         self.id_pool = IDPool()
 
