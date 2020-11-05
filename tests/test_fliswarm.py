@@ -16,3 +16,11 @@ def test_nuc(mock_docker):
 
     assert nuc.client is not None
     assert mock_docker.called_once()
+
+
+def test_actor(actor):
+
+    assert actor is not None
+    assert len(actor.nucs) > 0
+
+    assert actor.nucs['gfa1'].connected
