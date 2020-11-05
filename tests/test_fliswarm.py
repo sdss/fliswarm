@@ -81,3 +81,9 @@ async def test_talk_status(actor):
     assert len(actor.mock_replies) == 3
     assert actor.mock_replies[1].flag == 'i'
     assert actor.mock_replies[1]['text'] == 'gfa1,"Camera not connected"'
+
+
+async def test_reconnect(actor):
+
+    command = await actor.invoke_mock_command('reconnect --force')
+    assert command.status.failed
