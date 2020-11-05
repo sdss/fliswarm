@@ -54,15 +54,15 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "attrs"
-version = "20.2.0"
+version = "20.3.0"
 description = "Classes Without Boilerplate"
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface", "sphinx", "sphinx-rtd-theme", "pre-commit"]
-docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
+dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface", "furo", "sphinx", "pre-commit"]
+docs = ["furo", "sphinx", "zope.interface"]
 tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
 tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six"]
 
@@ -457,7 +457,7 @@ python-versions = ">=3.6"
 name = "packaging"
 version = "20.4"
 description = "Core utilities for Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -599,7 +599,7 @@ python-versions = ">=3.5"
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
@@ -766,7 +766,7 @@ docutils = ">=0.7"
 
 [[package]]
 name = "sdss-clu"
-version = "0.5.3"
+version = "0.5.4"
 description = "A new protocol for SDSS actors."
 category = "main"
 optional = false
@@ -785,7 +785,7 @@ docs = ["Sphinx (>=2.3)"]
 
 [[package]]
 name = "sdsstools"
-version = "0.4.3"
+version = "0.4.4"
 description = "Small tools for SDSS products"
 category = "main"
 optional = false
@@ -794,6 +794,7 @@ python-versions = ">=3.6,<4.0"
 [package.dependencies]
 docutils = ">=0.16,<0.17"
 invoke = ">=1.3.0,<2.0.0"
+packaging = ">=20.4,<21.0"
 pygments = ">=2.5.2,<3.0.0"
 pyyaml = ">=4.0"
 semantic-version = ">=2.8.4,<3.0.0"
@@ -1037,8 +1038,8 @@ atomicwrites = [
     {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
 ]
 attrs = [
-    {file = "attrs-20.2.0-py2.py3-none-any.whl", hash = "sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc"},
-    {file = "attrs-20.2.0.tar.gz", hash = "sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594"},
+    {file = "attrs-20.3.0-py2.py3-none-any.whl", hash = "sha256:31b2eced602aa8423c2aea9c76a724617ed67cf9513173fd3a4f03e3a929c7e6"},
+    {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
 ]
 autopep8 = [
     {file = "autopep8-1.5.4.tar.gz", hash = "sha256:d21d3901cb0da6ebd1e83fc9b0dfbde8b46afc2ede4fe32fbda0c7c6118ca094"},
@@ -1513,12 +1514,12 @@ rstcheck = [
     {file = "rstcheck-3.3.1.tar.gz", hash = "sha256:92c4f79256a54270e0402ba16a2f92d0b3c15c8f4410cb9c57127067c215741f"},
 ]
 sdss-clu = [
-    {file = "sdss-clu-0.5.3.tar.gz", hash = "sha256:c0631a617aff05142a98de04a2a62e7f2cc40c68190e040273e4e7e3031ad9be"},
-    {file = "sdss_clu-0.5.3-py3-none-any.whl", hash = "sha256:21bcf1bf1193760521474deb06ae6dd92f580fdf97cb3aa29146d342a7077c09"},
+    {file = "sdss-clu-0.5.4.tar.gz", hash = "sha256:dc30d9a16e0934afaf2e4db8e37b98842a2acc1e895c54c88c9dc1b2d9795be5"},
+    {file = "sdss_clu-0.5.4-py3-none-any.whl", hash = "sha256:b307159f6239602c71f0055379d57619b1be87637f33670cefa8cbd57752e44f"},
 ]
 sdsstools = [
-    {file = "sdsstools-0.4.3-py3-none-any.whl", hash = "sha256:1747edaf3834fd0b5c708d8122e3348f2eb49166cda8540143b4804930c0b3d5"},
-    {file = "sdsstools-0.4.3.tar.gz", hash = "sha256:3ad02017b3f0b5201bdf8d125af5e1ce4b38ad63b9a9add073ebdc128eac0823"},
+    {file = "sdsstools-0.4.4-py3-none-any.whl", hash = "sha256:cf5548ef9d6154109087edd27ae0261993ac58cc5b5206fcd198d8cc0faa19cb"},
+    {file = "sdsstools-0.4.4.tar.gz", hash = "sha256:bc9b0edad1c0d3e628b72ba26f320fd78cb75ca8046a7c4129f544ab80781a65"},
 ]
 semantic-version = [
     {file = "semantic_version-2.8.5-py2.py3-none-any.whl", hash = "sha256:45e4b32ee9d6d70ba5f440ec8cc5221074c7f4b0e8918bdab748cc37912440a9"},
