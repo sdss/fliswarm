@@ -35,7 +35,29 @@ def mock_write(self, message):
 def mock_docker(mocker):
     """Mock the docker Python module."""
 
-    yield mocker.patch('fliswarm.nuc.DockerClient')
+    mocker.patch.object(asyncio, 'sleep')
+    mocker.patch.object(fliswarm.actor.FlicameraDevice, 'start')
+
+    docker_mock = mocker.patch('fliswarm.nuc.DockerClient')
+
+    docker_client = mocker.MagicMock()
+    docker_mock.return_value = docker_client
+
+    volume = mocker.MagicMock()
+    volume.name = 'data'
+    volume.attrs = {'Options': {'device': ':/data'}}
+
+    container = mocker.MagicMock()
+    container.name = 'flicamera-gfa1'
+    container.short_id = 'abcd'
+
+    docker_client.volumes.list.return_value = [volume]
+    docker_client.volumes.create.return_value = volume
+
+    docker_client.containers.list.return_value = [container]
+    docker_client.containers.run.return_value = container
+
+    yield docker_mock
 
 
 @pytest.fixture(autouse=True)

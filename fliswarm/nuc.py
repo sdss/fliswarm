@@ -198,7 +198,7 @@ class NUC(object):
             all=True, filters={'name': name, 'status': 'exited'})
 
         if len(exited_containers) > 0:
-            map(lambda c: c.remove(v=False, force=True))
+            map(lambda c: c.remove(v=False, force=True), exited_containers)
 
         if force:
             ancestors = self.client.containers.list(

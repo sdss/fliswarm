@@ -64,12 +64,6 @@ async def test_enable_bad_name(actor):
     assert actor.mock_replies[1]['text'] == '"Cannot find NUC/camera bad_camera_name."'
 
 
-async def test_status(actor):
-
-    command = await actor.invoke_mock_command('status')
-    assert command.status.did_succeed
-
-
 async def test_talk_status(actor):
 
     actor.flicameras['gfa1'].replies.append(
@@ -87,3 +81,17 @@ async def test_reconnect(actor):
 
     command = await actor.invoke_mock_command('reconnect --force')
     assert command.status.did_succeed
+
+
+async def test_status(actor):
+
+    await actor.invoke_mock_command('disable --all')
+    await actor.invoke_mock_command('enable gfa1')
+
+    actor.mock_replies.clear()
+
+    command = await actor.invoke_mock_command('status')
+    assert command.status.did_succeed
+
+    assert len(actor.mock_replies) == 6
+    assert actor.mock_replies[2]['NUC'] == 'gfa1,sdss-gfa1,tcp://sdss-gfa1:2375,T,T'

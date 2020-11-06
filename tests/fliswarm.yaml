@@ -51,12 +51,6 @@ nucs:
         category: fvc
 
 volumes:
-    home:
-        driver: local
-        opts:
-            type: nfs
-            o: nfsvers=4,addr=sdss-hub,ro
-            device: :/home/albireo
     data:
         driver: local
         opts:
