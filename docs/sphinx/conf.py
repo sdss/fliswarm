@@ -43,9 +43,10 @@ use_releases = 'yes'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
-              'sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon',
+              'sphinx.ext.autosummary', 'sphinx.ext.viewcode',
+              'sphinx.ext.mathjax', 'sphinx.ext.intersphinx',
+              'sphinx_click']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -105,7 +106,7 @@ add_module_names = True
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-# pygments_style = 'sphinx'
+pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -152,14 +153,14 @@ html_theme_options = {
     'github_button': True,
     'github_type': 'star',
     'sidebar_collapse': True,
-    'page_width': '80%'
+    'page_width': '80%',
+    'fixed_sidebar': True
 }
 
 html_sidebars = {
     '**': [
         'about.html',
         'navigation.html',
-        'relations.html',
         'searchbox.html',
     ]
 }

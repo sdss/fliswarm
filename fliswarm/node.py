@@ -145,7 +145,11 @@ class Node(object):
         command.info(node=status)
 
         if containers:
-            image = config['registry'] + '/' + config['image'].split(':')[0]
+
+            image = config['image'].split(':')[0]
+            if config['registry']:
+                image = config['registry'] + '/' + image
+
             containers = self.client.containers.list(
                 all=True, filters={'ancestor': image, 'status': 'running'})
 
