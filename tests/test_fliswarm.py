@@ -8,44 +8,44 @@
 
 import pytest
 
-from fliswarm.nuc import NUC
+from fliswarm.node import Node
 
 
 pytestmark = [pytest.mark.asyncio]
 
 
-def test_nuc(mock_docker):
+def test_node(mock_docker):
 
-    nuc = NUC('test-nuc', 'fake-ip')
-    nuc.connect()
+    node = Node('test-node', 'fake-ip')
+    node.connect()
 
-    assert nuc.client is not None
+    assert node.client is not None
     assert mock_docker.called_once()
 
 
 def test_actor(actor):
 
     assert actor is not None
-    assert len(actor.nucs) > 0
+    assert len(actor.nodes) > 0
 
-    assert actor.nucs['gfa1'].connected
+    assert actor.nodes['gfa1'].connected
 
 
 async def test_disable_enable(actor):
 
     command = await actor.invoke_mock_command('disable gfa1')
     assert command.status.did_succeed
-    assert actor.nucs['gfa1'].enabled is False
+    assert actor.nodes['gfa1'].enabled is False
     assert len(actor.mock_replies) == 2
 
     command = await actor.invoke_mock_command('disable --all')
-    assert len([nuc for nuc in actor.nucs.values() if nuc.enabled]) == 0
+    assert len([node for node in actor.nodes.values() if node.enabled]) == 0
 
     command = await actor.invoke_mock_command('enable gfa1')
-    assert actor.nucs['gfa1'].enabled is True
+    assert actor.nodes['gfa1'].enabled is True
 
     command = await actor.invoke_mock_command('enable --all')
-    assert len([nuc for nuc in actor.nucs.values() if nuc.enabled]) == 7
+    assert len([node for node in actor.nodes.values() if node.enabled]) == 7
 
 
 async def test_disable_bad_name(actor):
@@ -53,7 +53,7 @@ async def test_disable_bad_name(actor):
     command = await actor.invoke_mock_command('disable bad_camera_name')
     assert command.status.did_succeed
 
-    assert actor.mock_replies[1]['text'] == '"Cannot find NUC/camera bad_camera_name."'
+    assert actor.mock_replies[1]['text'] == '"Cannot find node/camera bad_camera_name."'
 
 
 async def test_enable_bad_name(actor):
@@ -61,7 +61,7 @@ async def test_enable_bad_name(actor):
     command = await actor.invoke_mock_command('enable bad_camera_name')
     assert command.status.did_succeed
 
-    assert actor.mock_replies[1]['text'] == '"Cannot find NUC/camera bad_camera_name."'
+    assert actor.mock_replies[1]['text'] == '"Cannot find node/camera bad_camera_name."'
 
 
 async def test_talk_status(actor):
@@ -94,4 +94,4 @@ async def test_status(actor):
     assert command.status.did_succeed
 
     assert len(actor.mock_replies) == 6
-    assert actor.mock_replies[2]['NUC'] == 'gfa1,sdss-gfa1,tcp://sdss-gfa1:2375,T,T'
+    assert actor.mock_replies[2]['node'] == 'gfa1,sdss-gfa1,tcp://sdss-gfa1:2375,T,T'

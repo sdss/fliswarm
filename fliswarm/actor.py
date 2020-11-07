@@ -18,8 +18,8 @@ from clu.parser import command_parser
 from clu.tools import CommandStatus
 
 from . import __version__
-from .nuc import NUC
-from .tools import IDPool, select_nucs
+from .node import Node
+from .tools import IDPool, select_nodes
 
 
 class FlicameraDevice(Device):
@@ -126,149 +126,149 @@ class FLISwarmActor(LegacyActor):
 
         self.observatory = os.environ['OBSERVATORY']
 
-        self.nucs = {}
+        self.nodes = {}
         self.flicameras = {}
 
-    def connect_nucs(self):
-        """Connects to the NUCs."""
+    def connect_nodes(self):
+        """Connects to the nodes."""
 
-        nuc_config = self.config['nucs']
+        nconfig = self.config['nodes']
 
-        self.nucs = {name: NUC(name, nuc_config[name]['host'],
-                               daemon_addr=nuc_config[name]['docker-client'],
-                               category=nuc_config[name].get('category', None))
-                     for name in self.config['enabled_nucs']}
+        self.nodes = {name: Node(name, nconfig[name]['host'],
+                                 daemon_addr=nconfig[name]['docker-client'],
+                                 category=nconfig[name].get('category', None))
+                      for name in self.config['enabled_nodes']}
 
-        for nuc in self.nucs.values():
+        for node in self.nodes.values():
             try:
-                nuc.connect()
+                node.connect()
             except BaseException:
                 pass
 
     async def start(self):
         """Starts the actor."""
 
-        self.connect_nucs()
+        self.connect_nodes()
 
-        for nuc in self.nucs.values():
+        for node in self.nodes.values():
 
-            self.flicameras[nuc.name] = FlicameraDevice(
-                nuc.name, nuc.host,
-                self.config['nucs'][nuc.name]['port'], self)
+            self.flicameras[node.name] = FlicameraDevice(
+                node.name, node.addr,
+                self.config['nodes'][node.name]['port'], self)
 
-            if nuc.is_container_running(self.get_container_name(nuc)):
+            if node.is_container_running(self.get_container_name(node)):
                 try:
-                    await self.flicameras[nuc.name].start()
+                    await self.flicameras[node.name].start()
                 except OSError:
-                    self.write('w', text=f'{nuc.name}: failed to connect to '
+                    self.write('w', text=f'{node.name}: failed to connect to '
                                          f'the flicamera device.')
 
-        self.parser_args = [self.nucs]
+        self.parser_args = [self.nodes]
 
         return await super().start()
 
-    def get_container_name(self, nuc):
-        """Returns the name of the container for a NUC."""
+    def get_container_name(self, node):
+        """Returns the name of the container for a node."""
 
-        return self.config['container_name'] + f'-{nuc.name}'
+        return self.config['container_name'] + f'-{node.name}'
 
 
 @command_parser.command()
-async def status(command, nucs):
-    """Outputs the status of the NUCs and containers."""
+async def status(command, nodes):
+    """Outputs the status of the nodes and containers."""
 
-    enabled_nucs = [nuc for nuc in nucs.values() if nuc.enabled]
-    command.info(enabledNUCs=[nuc.name for nuc in enabled_nucs])
+    enabled_nodes = [node for node in nodes.values() if node.enabled]
+    command.info(enabledNodes=[node.name for node in enabled_nodes])
 
-    for nuc in enabled_nucs:
-        nuc.report_status(command)
+    for node in enabled_nodes:
+        node.report_status(command)
 
     command.finish()
 
 
 @command_parser.command()
 @click.option('--names', '-n', type=str,
-              help='Comma-separated NUCs to reconnect.')
+              help='Comma-separated nodes to reconnect.')
 @click.option('--category', '-c', type=str,
-              help='Category of NUCs to reconnect (gfa, fvc).')
+              help='Category of nodes to reconnect (gfa, fvc).')
 @click.option('--force', '-f', is_flag=True,
               help='Stops and restarts services even if they are running.')
-async def reconnect(command, nucs, names, category, force):
+async def reconnect(command, nodes, names, category, force):
     """Recreates volumes and restarts the Docker containers."""
 
     config = command.actor.config
 
-    def reconnect_nuc(nuc):
+    def reconnect_node(node):
         """Reconnect sync. Will be run in an executor."""
 
         actor = command.actor
 
-        if not nuc.connected:
-            nuc.report_status(command)
-            command.warning(text=f'NUC {nuc.name} is not pinging back or '
+        if not node.connected:
+            node.report_status(command)
+            command.warning(text=f'Node {node.name} is not pinging back or '
                                  'the Docker daemon is not running. Try '
                                  'rebooting the computer.')
             return
 
         # Stop container first, because we cannot remove volumes that are
         # attached to running containers.
-        nuc.stop_container(config['container_name'] + f'-{nuc.name}',
-                           config['image'],
-                           force=force,
-                           command=command)
+        node.stop_container(config['container_name'] + f'-{node.name}',
+                            config['image'],
+                            force=force,
+                            command=command)
 
         for vname in config['volumes']:
             vconfig = config['volumes'][vname]
-            nuc.create_volume(vname,
-                              driver=vconfig['driver'],
-                              opts=vconfig['opts'],
-                              force=force,
-                              command=command)
+            node.create_volume(vname,
+                               driver=vconfig['driver'],
+                               opts=vconfig['opts'],
+                               force=force,
+                               command=command)
 
-        return nuc.run_container(actor.get_container_name(nuc),
-                                 config['image'],
-                                 volumes=list(config['volumes']),
-                                 privileged=True,
-                                 registry=config['registry'],
-                                 ports=[config['nucs'][nuc.name]['port']],
-                                 envs={'ACTOR_NAME': nuc.name,
-                                       'OBSERVATORY': actor.observatory},
-                                 force=force,
-                                 command=command)
+        return node.run_container(actor.get_container_name(node),
+                                  config['image'],
+                                  volumes=list(config['volumes']),
+                                  privileged=True,
+                                  registry=config['registry'],
+                                  ports=[config['nodes'][node.name]['port']],
+                                  envs={'ACTOR_NAME': node.name,
+                                        'OBSERVATORY': actor.observatory},
+                                  force=force,
+                                  command=command)
 
-    c_nucs = select_nucs(nucs, category, names)
+    c_nodes = select_nodes(nodes, category, names)
 
     # Drop the device before doing anything with the containers, or we'll
     # get weird hangups.
-    for nuc in c_nucs:
-        nuc_name = nuc.name
-        device = command.actor.flicameras[nuc_name]
+    for node in c_nodes:
+        node_name = node.name
+        device = command.actor.flicameras[node_name]
         if device.is_connected():
             await device.stop()
 
     loop = asyncio.get_event_loop()
-    await asyncio.gather(*[loop.run_in_executor(None, reconnect_nuc, nuc)
-                           for nuc in c_nucs])
+    await asyncio.gather(*[loop.run_in_executor(None, reconnect_node, node)
+                           for node in c_nodes])
 
     command.info(text='Waiting 5 seconds before reconnecting the devices ...')
     await asyncio.sleep(5)
 
-    for nuc in c_nucs:
+    for node in c_nodes:
 
-        container_name = config['container_name'] + f'-{nuc.name}'
-        if not nuc.is_container_running(container_name):
+        container_name = config['container_name'] + f'-{node.name}'
+        if not node.is_container_running(container_name):
             continue
 
-        device = command.actor.flicameras[nuc.name]
+        device = command.actor.flicameras[node.name]
         await device.restart()
 
         if device.is_connected():
             port = device.port
-            nuc.report_status(command)
-            command.debug(text=f'{nuc.name}: reconnected to '
+            node.report_status(command)
+            command.debug(text=f'{node.name}: reconnected to '
                                f'device on port {port}.')
         else:
-            command.warning(text=f'{nuc.name}: failed to connect to device.')
+            command.warning(text=f'{node.name}: failed to connect to device.')
 
     command.finish()
 
@@ -279,13 +279,13 @@ async def reconnect(command, nucs, names, category, force):
               help='Comma-separated cameras to command.')
 @click.option('--category', '-c', type=str,
               help='Category of cameras to talk to (gfa, fvc).')
-async def talk(command, nucs, camera_command, names, category):
+async def talk(command, nodes, camera_command, names, category):
     """Sends a command to selected or all cameras."""
 
     camera_command = ' '.join(camera_command)
 
-    c_nucs = select_nucs(nucs, category, names)
-    names = [nuc.name for nuc in c_nucs]
+    c_nodes = select_nodes(nodes, category, names)
+    names = [node.name for node in c_nodes]
 
     flicameras = command.actor.flicameras
 
@@ -312,35 +312,35 @@ async def talk(command, nucs, camera_command, names, category):
 
 @command_parser.command()
 @click.argument('CAMERA-NAMES', nargs=-1, type=str)
-@click.option('-a', '--all', is_flag=True, help='Disable all NUCs/cameras.')
-async def disable(command, nucs, camera_names, all):
-    """Disables one or multiple cameras/NUCs."""
+@click.option('-a', '--all', is_flag=True, help='Disable all nodes/cameras.')
+async def disable(command, nodes, camera_names, all):
+    """Disables one or multiple cameras/nodes."""
 
     if all is True:
-        camera_names = list(nucs)
+        camera_names = list(nodes)
 
     for name in camera_names:
-        if name not in nucs:
-            command.warning(text=f'Cannot find NUC/camera {name}.')
+        if name not in nodes:
+            command.warning(text=f'Cannot find node/camera {name}.')
             continue
-        nucs[name].enabled = False
+        nodes[name].enabled = False
 
     command.finish()
 
 
 @command_parser.command()
 @click.argument('CAMERA-NAMES', nargs=-1, type=str)
-@click.option('-a', '--all', is_flag=True, help='Enable all NUCs/cameras.')
-async def enable(command, nucs, camera_names, all):
-    """Enables one or multiple cameras/NUCs."""
+@click.option('-a', '--all', is_flag=True, help='Enable all nodes/cameras.')
+async def enable(command, nodes, camera_names, all):
+    """Enables one or multiple cameras/nodes."""
 
     if all is True:
-        camera_names = list(nucs)
+        camera_names = list(nodes)
 
     for name in camera_names:
-        if name not in nucs:
-            command.warning(text=f'Cannot find NUC/camera {name}.')
+        if name not in nodes:
+            command.warning(text=f'Cannot find node/camera {name}.')
             continue
-        nucs[name].enabled = True
+        nodes[name].enabled = True
 
     command.finish()

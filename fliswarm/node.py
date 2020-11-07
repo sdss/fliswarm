@@ -3,7 +3,7 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-10-30
-# @Filename: nuc.py
+# @Filename: node.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import subprocess
@@ -16,36 +16,36 @@ from .tools import FakeCommand
 DEFAULT_DOCKER_PORT = 2375
 
 
-class NUC(object):
-    """A client to handle a NUC.
+class Node(object):
+    """A client to handle a computer node.
 
     Parameters
     ----------
     name : str
-        The name associated with this NUC.
-    host : str
-        The address to the NUC host.
+        The name associated with this node.
+    addr : str
+        The address to the node.
     category : str
         A category to use as a filter.
     daemon_addr : str
         The address to the Docker daemon. If `None`, defaults to
-        ``tcp://host:port`` where ``port`` is the default Docker daemon port.
+        ``tcp://node:port`` where ``port`` is the default Docker daemon port.
     registry : str
         The path to the Docker registry.
 
     """
 
-    def __init__(self, name, host, category=None,
+    def __init__(self, name, addr, category=None,
                  daemon_addr=None, registry=None):
 
         self.name = name
-        self.host = host
+        self.addr = addr
         self.category = category
 
         if daemon_addr:
             self.daemon_addr = daemon_addr
         else:
-            self.daemon_addr = f'tcp://{host}:{DEFAULT_DOCKER_PORT}'
+            self.daemon_addr = f'tcp://{addr}:{DEFAULT_DOCKER_PORT}'
 
         self.registry = registry
         self.client = None
@@ -53,16 +53,16 @@ class NUC(object):
         self.enabled = True
 
     def connect(self):
-        """Connects to the Docker client on the remote host."""
+        """Connects to the Docker client on the remote node."""
 
         if not self.ping():
-            raise ConnectionError(f'Host {self.host} is not responding.')
+            raise ConnectionError(f'Node {self.addr} is not responding.')
 
         self.client = DockerClient(self.daemon_addr, timeout=1)
 
     @property
     def connected(self):
-        """Returns `True` if the NUC and the Docker client are connected."""
+        """Returns `True` if the node and the Docker client are connected."""
 
         return (self.enabled and self.ping() and
                 self.client and self.client.ping())
@@ -82,10 +82,10 @@ class NUC(object):
         return False
 
     def ping(self, timeout=0.1):
-        """Pings the NUC host. Returns `True` if the host is responding."""
+        """Pings the node. Returns `True` if the node is responding."""
 
         ping = subprocess.run(['ping', '-c', '1',
-                               '-W', str(timeout), self.host],
+                               '-W', str(timeout), self.addr],
                               capture_output=True)
 
         return True if ping.returncode == 0 else False
@@ -101,48 +101,48 @@ class NUC(object):
         return False
 
     def report_status(self, command, volumes=True, containers=True):
-        """Reports the status of the NUC.
+        """Reports the status of the node to an actor.
 
         Parameters
         ----------
         command : ~clu.command.Command
             The command that is requesting the status.
         volumes : bool
-            Whether to report the volumes connected to the NUC Docker.
+            Whether to report the volumes connected to the node Docker engine.
         containers : bool
             Whether to report the containers running. Only reports running
             containers whose ancestor matches the ``config['image']``.
 
         Notes
         -----
-        Outputs the ``nuc`` keyword, with format
-        ``NUC={nuc_name, host, daemon_addr, nuc_alive, docker_alive}``.
+        Outputs the ``node`` keyword, with format
+        ``node={node_name, addr, daemon_addr, node_alive, docker_alive}``.
         If ``containers=True``, outputs the ``container`` keyword with
-        format ``container={nuc_name, container_short_id}``. If
+        format ``container={node_name, container_short_id}``. If
         ``volumes=True``, reports the ``volume`` keyword with format
-        ``volume={nuc_name, volume, exists, mount_point}``
+        ``volume={node_name, volume, exists, mount_point}``
 
         """
 
-        status = [self.name, self.host, self.daemon_addr, False, False]
+        status = [self.name, self.addr, self.daemon_addr, False, False]
 
         config = command.actor.config
 
         if not self.ping(timeout=config['ping_timeout']):
-            command.warning(text=f'Host {self.host} is not pinging back.')
-            command.info(NUC=status)
+            command.warning(text=f'Node {self.addr} is not pinging back.')
+            command.info(node=status)
             return
 
         status[3] = True  # The NUC is responding.
 
         if not self.client or not self.client.ping():
-            command.warning(text=f'Docker client on host {self.host} '
+            command.warning(text=f'Docker client on node {self.addr} '
                                  'is not connected.')
-            command.info(NUC=status)
+            command.info(node=status)
             return
 
         status[4] = True
-        command.info(NUC=status)
+        command.info(node=status)
 
         if containers:
             image = config['registry'] + '/' + config['image'].split(':')[0]
@@ -150,11 +150,11 @@ class NUC(object):
                 all=True, filters={'ancestor': image, 'status': 'running'})
 
             if len(containers) == 0:
-                command.warning(text=f'No containers running on {self.host}.')
+                command.warning(text=f'No containers running on {self.addr}.')
                 command.debug(container=[self.name, 'NA'])
             elif len(containers) > 1:
                 command.warning(text=f'Multiple containers with image {image} '
-                                     f'running on host {self.host}.')
+                                     f'running on node {self.addr}.')
                 command.debug(container=[self.name, 'NA'])
             else:
                 command.debug(container=[self.name, containers[0].short_id])
@@ -222,7 +222,7 @@ class NUC(object):
     def run_container(self, name, image, volumes=[], privileged=False,
                       registry=None, envs={}, ports=[], force=False,
                       command=None):
-        """Runs a container in the NUC, in detached mode.
+        """Runs a container in the node, in detached mode.
 
         Parameters
         ----------
@@ -233,7 +233,7 @@ class NUC(object):
         volumes : list
             Names of the volumes to mount. The mount point in the container
             will match the original device. The volumes must already exist
-            in the NUC.
+            in the node Docker engine.
         privileged : bool
             Whether to run the container in privileged mode.
         registry : bool
@@ -245,9 +245,9 @@ class NUC(object):
         ports : dict or list
             Ports to bind inside the container. The format must be
             ``{'2222/tcp': 3333}`` which will expose port 2222 inside the
-            container as port 3333 on the host. Also accepted is a list of
+            container as port 3333 on the node. Also accepted is a list of
             integers; each integer port will be exposed in the container
-            and bound to the same port in the host.
+            and bound to the same port in the node.
         force : bool
             If `True`, removes any running containers of the same name,
             or any container with the same image as ancestor.
@@ -256,11 +256,12 @@ class NUC(object):
 
         Returns
         -------
-        The container object.
+        :
+            The container object.
 
         """
 
-        # This is the command in general we aim to run.
+        # This is the command we aim to run.
         # docker --context gfa1 run
         #        --rm -d -p 19995:19995
         #        --mount source=data,target=/data
@@ -309,7 +310,7 @@ class NUC(object):
 
     def create_volume(self, name, driver='local', opts={}, force=False,
                       command=None):
-        """Creates a volume in the NUC Docker.
+        """Creates a volume in the node Docker engine.
 
         Parameters
         ----------
@@ -328,15 +329,15 @@ class NUC(object):
 
         Returns
         -------
-        The volume object.
+        :
+            The volume object.
 
         Examples
         --------
         To create an NFS volume pointing to ``/data`` on ``sdss-hub`` ::
 
             nuc.create_volume('data', driver='local'
-                              opts=['type=nfs',
-                                    'o=nfsvers=4,addr=sdss-hub,rw',
+                              opts=['type=nfs', 'o=nfsvers=4,addr=sdss-hub,rw',
                                     'device=:/data'])
 
         """

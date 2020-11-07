@@ -4,11 +4,20 @@
 fliswarm Reference
 ==================
 
-NUC
----
+Actor
+-----
 
-.. automodule:: fliswarm.nuc
-   :members: NUC
+.. automodule:: fliswarm.actor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Node
+----
+
+.. automodule:: fliswarm.node
+   :members: Node
    :undoc-members:
    :show-inheritance:
 

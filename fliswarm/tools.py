@@ -6,49 +6,49 @@
 # @Filename: tools.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-__all__ = ['select_nucs', 'FakeCommand', 'IDPool']
+__all__ = ['select_nodes', 'FakeCommand', 'IDPool']
 
 
-def select_nucs(nucs, category=None, names=None):
-    """Filters the NUCs to command.
+def select_nodes(nodes, category=None, names=None):
+    """Filters the nodes to command.
 
     Parameters
     ----------
-    nucs : dict
-        A dictionary of `.NUC` instances to be filtered, keyed by NUC name.
+    nodes : dict
+        A dictionary of `.Node` instances to be filtered, keyed by node name.
     category : str
         A category on which to filter.
     names : str or list
-        A list or comma-separated string of NUC names on which to filter.
+        A list or comma-separated string of node names on which to filter.
 
     Returns
     -------
     `set`
-        A `set` of enabled `.NUC` instances that match the provided
+        A `set` of enabled `.Node` instances that match the provided
         ``category`` or ``names``. If neither ``category`` or ``names``
-        are defined, returns all the ``nucs``.
+        are defined, returns all the ``nodes``.
 
     """
 
     if names and isinstance(names, str):
         names = list(map(lambda x: x.strip(), names.split(',')))
 
-    valid_nucs = set()
+    valid_nodes = set()
 
     if names:
-        valid_nucs |= set([nuc for nuc in nucs.values()
-                           if nuc.name in names])
+        valid_nodes |= set([node for node in nodes.values()
+                           if node.name in names])
 
     if category:
-        valid_nucs |= set([nuc for nuc in nucs.values()
-                           if nuc.category in category])
+        valid_nodes |= set([node for node in nodes.values()
+                           if node.category in category])
 
     if not names and not category:
-        valid_nucs |= set(nucs.values())
+        valid_nodes |= set(nodes.values())
 
-    enabled_nucs = set([nuc for nuc in valid_nucs if nuc.enabled])
+    enabled_nodes = set([node for node in valid_nodes if node.enabled])
 
-    return enabled_nucs
+    return enabled_nodes
 
 
 class FakeCommand:

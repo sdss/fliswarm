@@ -11,9 +11,9 @@ container_name: flicamera
 
 ping_timeout: 0.1
 
-enabled_nucs: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
+enabled_nodes: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
 
-nucs:
+nodes:
     gfa1:
         host: sdss-gfa1
         port: 19995

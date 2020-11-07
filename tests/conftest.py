@@ -15,7 +15,7 @@ from clu.testing import TestCommand, setup_test_actor
 
 import fliswarm.actor
 from fliswarm.actor import FLISwarmActor
-from fliswarm.nuc import NUC
+from fliswarm.node import Node
 
 
 def mock_write(self, message):
@@ -38,7 +38,7 @@ def mock_docker(mocker):
     mocker.patch.object(asyncio, 'sleep')
     mocker.patch.object(fliswarm.actor.FlicameraDevice, 'start')
 
-    docker_mock = mocker.patch('fliswarm.nuc.DockerClient')
+    docker_mock = mocker.patch('fliswarm.node.DockerClient')
 
     docker_client = mocker.MagicMock()
     docker_mock.return_value = docker_client
@@ -64,7 +64,7 @@ def mock_docker(mocker):
 def mock_ping(mocker):
     """Mock the docker Python module."""
 
-    yield mocker.patch.object(NUC, 'ping')
+    yield mocker.patch.object(Node, 'ping')
 
 
 @pytest.fixture(autouse=True)
