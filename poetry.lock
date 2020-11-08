@@ -868,6 +868,20 @@ pbr = ">=2.0"
 sphinx = ">=1.5,<4.0"
 
 [[package]]
+name = "sphinx-copybutton"
+version = "0.3.1"
+description = "Add a copy button to each of your code cells."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+sphinx = ">=1.8"
+
+[package.extras]
+code_style = ["flake8 (>=3.7.0,<3.8.0)", "black", "pre-commit (==1.17.0)"]
+
+[[package]]
 name = "sphinxcontrib-applehelp"
 version = "1.0.2"
 description = "sphinxcontrib-applehelp is a sphinx extension which outputs Apple help books"
@@ -1024,12 +1038,12 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [extras]
-docs = ["sphinx-click"]
+docs = ["sphinx-click", "sphinx-copybutton"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "71d4a2672cbe93bf8049b6d018c79df4c26c7fc791b74a65c9cf74c7f52fd02e"
+content-hash = "9187faf36639579ec22e0ca72097d3decb0d744654e571b08ead92963a96f51e"
 
 [metadata.files]
 aio-pika = [
@@ -1555,6 +1569,10 @@ sphinx = [
 sphinx-click = [
     {file = "sphinx-click-2.5.0.tar.gz", hash = "sha256:8ba44ca446ba4bb0585069b8aabaa81e833472d6669b36924a398405311d206f"},
     {file = "sphinx_click-2.5.0-py2.py3-none-any.whl", hash = "sha256:6848ba2d084ef2feebae0ce3603c1c02a2ba5ded54fb6c0cf24fd01204a945f3"},
+]
+sphinx-copybutton = [
+    {file = "sphinx-copybutton-0.3.1.tar.gz", hash = "sha256:0e0461df394515284e3907e3f418a0c60ef6ab6c9a27a800c8552772d0a402a2"},
+    {file = "sphinx_copybutton-0.3.1-py3-none-any.whl", hash = "sha256:5125c718e763596e6e52d92e15ee0d6f4800ad3817939be6dee51218870b3e3d"},
 ]
 sphinxcontrib-applehelp = [
     {file = "sphinxcontrib-applehelp-1.0.2.tar.gz", hash = "sha256:a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58"},

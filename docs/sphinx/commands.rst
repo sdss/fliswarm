@@ -1,8 +1,18 @@
 
-.. _command-set:
 
-Command Set
-===========
+Commands
+========
+
+Command Line Interface
+----------------------
+
+.. click:: fliswarm.__main__:fliswarm
+   :prog: fliswarm
+   :show-nested:
+
+
+Actor Commands
+--------------
 
 .. click:: fliswarm.actor:command_parser
    :prog: fliswarm

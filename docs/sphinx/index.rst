@@ -1,10 +1,16 @@
 
+.. highlight:: console
+
 fliswarm's documentation
 ========================
 
-This is the documentation for the SDSS Python product ``fliswarm``. The current version is |fliswarm_version|. You can install the package by doing
+This is the documentation for the SDSS Python product ``fliswarm``. The current version is |fliswarm_version|.
 
-.. code-block:: console
+
+Installation
+------------
+
+You can install the package by doing ::
 
   $ pip install sdss-fliswarm
 
@@ -12,33 +18,23 @@ This is the documentation for the SDSS Python product ``fliswarm``. The current 
 Running fliswarm
 ----------------
 
-To run the ``fliswarm`` actor as a daemon
-
-.. code-block:: console
+To run the ``fliswarm`` actor as a daemon ::
 
   $ fliswarm [-c config] start
 
-where ``config`` is a configuration file for ``fliswarm``. If a configuration file is not provided, the `internal configuration <https://github.com/sdss/fliswarm/blob/main/fliswarm/etc/fliswarm.yaml>`__ will be used. The actor can be stopped with
-
-.. code-block:: console
+where ``config`` is a configuration file for ``fliswarm``. If a configuration file is not provided, the `internal configuration <https://github.com/sdss/fliswarm/blob/main/fliswarm/etc/fliswarm.yaml>`__ will be used. The actor can be stopped with ::
 
   $ fliswam stop
 
-It's also possible to run the actor in non-detached mode with
-
-.. code-block:: console
+It's also possible to run the actor in non-detached mode with ::
 
   $ fliswarm start --debug
 
-To save the output of the process to a logfile you can do
-
-.. code-block:: console
+To save the output of the process to a logfile you can do ::
 
   $ fliswarm start --log <filename>
 
-The actor can also be run by doing
-
-.. code-block:: console
+The actor can also be run by doing ::
 
   $ module load fliswarm
   $ stageManager fliswarm start
@@ -93,6 +89,70 @@ Finally, the node computers must be able to pull images from the local registry.
 replacing ``10.25.1.1`` with the IP or hostname to the manager computer that is serving the registry. Then restart the Docker service.
 
 .. note:: Enabling a local registry is only necessary to ensure that ``fliswarm`` can be run offline. If this is not a requirement it is possible to use a remote registry (for example the Docker Hub) by setting the configuration parameter ``registry`` to ``null``.
+
+
+Configuration file
+------------------
+
+A valid configuration file, in YAML format, looks like
+
+.. code-block:: yaml
+
+  # CLU-like actor configuration options
+  actor:
+      name: fliswarm
+      host: 127.0.0.1
+      port: 19996
+      tron_host: sdss-hub
+      tron_port: 6093
+      log_dir: /data/logs/actors/fliswarm
+
+  # Address and port to the local registry. Set to null to use Docker Hub
+  registry: sdss-hub:5000
+
+  # Image and tag name
+  image: flicamera:latest
+
+  # The prefix of the container name. The final name will be
+  # flicamera-gfa1, flicamera-gfa2, ...
+  container_name: flicamera
+
+  # Timeout for the ping command to check if the node is alive
+  ping_timeout: 0.1
+
+  # What of the below nodes are enabled
+  enabled_nodes: [gfa1, gfa2, fvc]
+
+  # A dictionary of nodes:
+  # host: The hostname or IP of the node.
+  # docker-client: The address to the Docker daemon running on the node.
+  # category: A string to group similar groups of flicamera instances.
+  nodes:
+      gfa1:
+          host: sdss-gfa1
+          port: 19995
+          docker-client: tcp://sdss-gfa1:2375
+          category: gfa
+      gfa2:
+          host: sdss-gfa2
+          port: 19995
+          docker-client: tcp://sdss-gfa2:2375
+          category: gfa
+      fvc:
+          host: sdss-fvc
+          port: 19995
+          docker-client: tcp://sdss-fvc:2375
+          category: fvc
+
+  # List of volumes that will be mounted in the container. The syntax is the
+  # same as for the Docker --mount option.
+  volumes:
+      data:
+          driver: local
+          opts:
+              type: nfs
+              o: nfsvers=4,addr=sdss-hub,rw
+              device: :/data
 
 
 .. toctree::
