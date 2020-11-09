@@ -8,7 +8,7 @@ actor:
 
 registry: sdss-hub:5000
 
-image: sdss/flicamera:latest
+image: sdss5/flicamera:latest
 container_name: flicamera
 
 ping_timeout: 0.1

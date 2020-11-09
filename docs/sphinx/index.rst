@@ -111,7 +111,7 @@ A valid configuration file, in YAML format, looks like
   registry: sdss-hub:5000
 
   # Image and tag name
-  image: flicamera:latest
+  image: sdss5/flicamera:latest
 
   # The prefix of the container name. The final name will be
   # flicamera-gfa1, flicamera-gfa2, ...
