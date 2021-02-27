@@ -18,15 +18,16 @@ try:
     from fliswarm import __version__
 except ModuleNotFoundError:
     from sdsstools import get_package_version
-    __version__ = get_package_version(__file__, 'sdss-fliswarm') or 'dev'
+
+    __version__ = get_package_version(__file__, "sdss-fliswarm") or "dev"
 
 
 # Are we building in RTD?
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # Sphinx template selected in cookiecutter and whether to use releases
-sphinx_template = 'alabaster'
-use_releases = 'yes'
+sphinx_template = "alabaster"
+use_releases = "yes"
 
 
 # Importing matplotlib here with agg to prevent tkinter error in readthedocs
@@ -43,18 +44,24 @@ use_releases = 'yes'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon',
-              'sphinx.ext.autosummary', 'sphinx.ext.viewcode',
-              'sphinx.ext.mathjax', 'sphinx.ext.intersphinx',
-              'sphinx_click', 'sphinx_copybutton']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.intersphinx",
+    "sphinx_click",
+    "sphinx_copybutton",
+]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
+source_suffix = [".rst", ".md"]
 # source_suffix = '.rst'
 
 # source_parsers = {
@@ -62,12 +69,12 @@ source_suffix = ['.rst', '.md']
 # }
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'fliswarm'
-copyright = '{0}, {1}'.format('2020', 'José Sánchez-Gallego')
-author = 'José Sánchez-Gallego'
+project = "fliswarm"
+copyright = "{0}, {1}".format("2020", "José Sánchez-Gallego")
+author = "José Sánchez-Gallego"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -88,11 +95,11 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-default_role = 'py:obj'
+default_role = "py:obj"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
@@ -106,7 +113,7 @@ add_module_names = True
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -118,13 +125,15 @@ pygments_style = 'sphinx'
 todo_include_todos = False
 
 # Intersphinx mappings
-intersphinx_mapping = {'python': ('https://docs.python.org/3.6', None),
-                       'astropy': ('http://docs.astropy.org/en/latest', None),
-                       'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-                       'clu': ('https://clu.readthedocs.io/en/latest/', None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3.6", None),
+    "astropy": ("http://docs.astropy.org/en/latest", None),
+    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+    "clu": ("https://clu.readthedocs.io/en/latest/", None),
+}
 
-autodoc_mock_imports = ['_tkinter']
-autodoc_member_order = 'groupwise'
+autodoc_mock_imports = ["_tkinter"]
+autodoc_member_order = "groupwise"
 
 napoleon_use_rtype = False
 napoleon_use_ivar = True
@@ -138,36 +147,35 @@ rst_epilog = f"""
 
 # -- Options for HTML output ----------------------------------------------
 
-html_css_files = [
-]
+html_css_files = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = 'alabaster'
+html_theme = "alabaster"
 
 html_theme_options = {
-    'logo': 'sdssv_logo.png',
-    'github_user': 'sdss',
-    'github_repo': project,
-    'github_button': True,
-    'github_type': 'star',
-    'sidebar_collapse': True,
-    'page_width': '80%',
-    'fixed_sidebar': True
+    "logo": "sdssv_logo.png",
+    "github_user": "sdss",
+    "github_repo": project,
+    "github_button": True,
+    "github_type": "star",
+    "sidebar_collapse": True,
+    "page_width": "80%",
+    "fixed_sidebar": True,
 }
 
 html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'searchbox.html',
+    "**": [
+        "about.html",
+        "navigation.html",
+        "searchbox.html",
     ]
 }
 
 html_css_files += ["custom.css"]
 
-html_favicon = './_static/favicon_sdssv.ico'
+html_favicon = "./_static/favicon_sdssv.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -177,13 +185,13 @@ html_favicon = './_static/favicon_sdssv.ico'
 if on_rtd:
     html_static_path = []
 else:
-    html_static_path = ['_static']
+    html_static_path = ["_static"]
 
 
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '{0}pdoc'.format('fliswarm')
+htmlhelp_basename = "{0}pdoc".format("fliswarm")
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -192,15 +200,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -210,18 +215,20 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, '{0}.tex'.format(project), u'{0} Documentation'.format(project),
-     author, 'manual'),
+    (
+        master_doc,
+        "{0}.tex".format(project),
+        "{0} Documentation".format(project),
+        author,
+        "manual",
+    ),
 ]
 
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'fliswarm', u'{0} Documentation'.format(project),
-     [author], 1)
-]
+man_pages = [(master_doc, "fliswarm", "{0} Documentation".format(project), [author], 1)]
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -229,15 +236,21 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, project, u'{0} Documentation'.format(project),
-     author, project, 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        project,
+        "{0} Documentation".format(project),
+        author,
+        project,
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
-if use_releases == 'yes':
+if use_releases == "yes":
 
-    extensions += ['sdsstools.releases']
+    extensions += ["sdsstools.releases"]
 
-    releases_github_path = 'sdss/fliswarm'
-    releases_document_name = ['CHANGELOG']
+    releases_github_path = "sdss/fliswarm"
+    releases_document_name = ["CHANGELOG"]
     releases_unstable_prehistory = True

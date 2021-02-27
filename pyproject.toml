@@ -22,7 +22,7 @@ classifiers = [
 packages = [
     { include = "fliswarm" }
 ]
-include = ["fliswarm/etc/*", "LICENSE.md"]
+include = ["fliswarm/etc/*"]
 
 [tool.poetry.scripts]
 fliswarm = "fliswarm.__main__:main"
@@ -35,8 +35,6 @@ docker = "^4.3.1"
 sdss-clu = "^0.5.2"
 click-default-group = "^1.2.2"
 daemonocle = "^1.0.2"
-sphinx-click = {version="^2.3.0", optional=true}
-sphinx-copybutton = {version="^0.3.1", optional=true}
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
@@ -57,20 +55,21 @@ Sphinx = "^3.0.0"
 autopep8 = "^1.5.4"
 sphinx-click = "^2.3.0"
 sphinx-copybutton = "^0.3.1"
+black = {version = "^20.8b1", allow-prereleases = true}
 
-[tool.poetry.extras]
-docs = ["sphinx-click", "sphinx-copybutton"]
+[tool.black]
+line-length = 88
+target-version = ['py38']
+fast = true
 
 [tool.isort]
-line_length = 79
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
+profile = "black"
+sections = ["FUTURE", "STDLIB", "TYPING", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
 default_section = "THIRDPARTY"
 known_first_party = "fliswarm"
-known_sdss = ["sdsstools"]
-balanced_wrapping = true
-include_trailing_comma = false
+known_typing = ["typing"]
+known_sdss = ["sdsstools", "clu", "basecam", "flicamera"]
 lines_after_imports = 2
-use_parentheses = true
 
 [tool.pytest.ini_options]
 addopts = "--cov fliswarm --cov-report xml --cov-report html --cov-report term"
@@ -91,5 +90,5 @@ exclude_lines = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools>=49.6.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

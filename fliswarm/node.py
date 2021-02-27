@@ -8,7 +8,11 @@
 
 import subprocess
 
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
+
 from docker import DockerClient, types
+
+from clu.command import Command
 
 from .tools import FakeCommand
 
@@ -16,27 +20,32 @@ from .tools import FakeCommand
 DEFAULT_DOCKER_PORT = 2375
 
 
-class Node(object):
+class Node:
     """A client to handle a computer node.
 
     Parameters
     ----------
-    name : str
+    name
         The name associated with this node.
-    addr : str
+    addr
         The address to the node.
-    category : str
+    category
         A category to use as a filter.
-    daemon_addr : str
+    daemon_addr
         The address to the Docker daemon. If `None`, defaults to
         ``tcp://node:port`` where ``port`` is the default Docker daemon port.
-    registry : str
+    registry
         The path to the Docker registry.
-
     """
 
-    def __init__(self, name, addr, category=None,
-                 daemon_addr=None, registry=None):
+    def __init__(
+        self,
+        name: str,
+        addr: str,
+        category: Optional[str] = None,
+        daemon_addr: Optional[str] = None,
+        registry: Optional[str] = None,
+    ):
 
         self.name = name
         self.addr = addr
@@ -45,7 +54,7 @@ class Node(object):
         if daemon_addr:
             self.daemon_addr = daemon_addr
         else:
-            self.daemon_addr = f'tcp://{addr}:{DEFAULT_DOCKER_PORT}'
+            self.daemon_addr = f"tcp://{addr}:{DEFAULT_DOCKER_PORT}"
 
         self.registry = registry
         self.client = None
@@ -56,60 +65,68 @@ class Node(object):
         """Connects to the Docker client on the remote node."""
 
         if not self.ping():
-            raise ConnectionError(f'Node {self.addr} is not responding.')
+            raise ConnectionError(f"Node {self.addr} is not responding.")
 
         self.client = DockerClient(self.daemon_addr, timeout=1)
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         """Returns `True` if the node and the Docker client are connected."""
 
-        return (self.enabled and self.ping() and
-                self.client and self.client.ping())
+        return cast(
+            bool,
+            self.enabled and self.ping() and self.client and self.client.ping(),
+        )
 
-    def is_container_running(self, name):
+    def is_container_running(self, name: str):
         """Returns `True` if the container is running."""
 
         if not self.client:
             return False
 
         containers = self.client.containers.list(
-            filters={'name': name, 'status': 'running'})
+            filters={"name": name, "status": "running"}
+        )
 
         if len(containers) == 1:
             return True
 
         return False
 
-    def ping(self, timeout=0.1):
+    def ping(self, timeout=0.1) -> bool:
         """Pings the node. Returns `True` if the node is responding."""
 
-        ping = subprocess.run(['ping', '-c', '1',
-                               '-W', str(timeout), self.addr],
-                              capture_output=True)
+        ping = subprocess.run(
+            ["ping", "-c", "1", "-W", str(timeout), self.addr], capture_output=True
+        )
 
         return True if ping.returncode == 0 else False
 
-    def get_volume(self, name):
+    def get_volume(self, name: str):
         """Returns the volume that matches the name, if it exists."""
 
-        volumes = self.client.volumes.list()
+        volumes: List[Any] = self.client.volumes.list()
 
         for vol in volumes:
             if vol.name == name:
                 return vol
         return False
 
-    def report_status(self, command, volumes=True, containers=True):
+    def report_status(
+        self,
+        command: Command,
+        volumes: bool = True,
+        containers: bool = True,
+    ):
         """Reports the status of the node to an actor.
 
         Parameters
         ----------
-        command : ~clu.command.Command
+        command
             The command that is requesting the status.
-        volumes : bool
+        volumes
             Whether to report the volumes connected to the node Docker engine.
-        containers : bool
+        containers
             Whether to report the containers running. Only reports running
             containers whose ancestor matches the ``config['image']``.
 
@@ -121,23 +138,23 @@ class Node(object):
         format ``container={node_name, container_short_id}``. If
         ``volumes=True``, reports the ``volume`` keyword with format
         ``volume={node_name, volume, exists, mount_point}``
-
         """
 
         status = [self.name, self.addr, self.daemon_addr, False, False]
 
         config = command.actor.config
 
-        if not self.ping(timeout=config['ping_timeout']):
-            command.warning(text=f'Node {self.addr} is not pinging back.')
+        if not self.ping(timeout=config["ping_timeout"]):
+            command.warning(text=f"Node {self.addr} is not pinging back.")
             command.info(node=status)
             return
 
         status[3] = True  # The NUC is responding.
 
         if not self.client or not self.client.ping():
-            command.warning(text=f'Docker client on node {self.addr} '
-                                 'is not connected.')
+            command.warning(
+                text=f"Docker client on node {self.addr} " "is not connected."
+            )
             command.info(node=status)
             return
 
@@ -146,123 +163,145 @@ class Node(object):
 
         if containers:
 
-            image = config['image'].split(':')[0]
-            if config['registry']:
-                image = config['registry'] + '/' + image
+            image = config["image"].split(":")[0]
+            if config["registry"]:
+                image = config["registry"] + "/" + image
 
-            containers = self.client.containers.list(
-                all=True, filters={'ancestor': image, 'status': 'running'})
+            container_list: List[Any] = self.client.containers.list(
+                all=True,
+                filters={"ancestor": image, "status": "running"},
+            )
 
-            if len(containers) == 0:
-                command.warning(text=f'No containers running on {self.addr}.')
-                command.debug(container=[self.name, 'NA'])
-            elif len(containers) > 1:
-                command.warning(text=f'Multiple containers with image {image} '
-                                     f'running on node {self.addr}.')
-                command.debug(container=[self.name, 'NA'])
+            if len(container_list) == 0:
+                command.warning(text=f"No containers running on {self.addr}.")
+                command.debug(container=[self.name, "NA"])
+            elif len(container_list) > 1:
+                command.warning(
+                    text=f"Multiple containers with image {image} "
+                    f"running on node {self.addr}."
+                )
+                command.debug(container=[self.name, "NA"])
             else:
-                command.debug(container=[self.name, containers[0].short_id])
+                command.debug(container=[self.name, container_list[0].short_id])
 
         if volumes:
-            volumes = self.client.volumes.list()
-            for vname in config['volumes']:
-                volume = self.get_volume(vname)
+            for vname in config["volumes"]:
+                volume: Any = self.get_volume(vname)
                 if volume is False:
-                    command.warning(text=f'Volume {vname} not present '
-                                         f'in {self.name}.')
-                    command.debug(volume=[self.name, vname, False, 'NA'])
+                    command.warning(
+                        text=f"Volume {vname} not present " f"in {self.name}."
+                    )
+                    command.debug(volume=[self.name, vname, False, "NA"])
                     continue
-                command.debug(volume=[self.name, vname, True,
-                                      volume.attrs['Options']['device']])
+                command.debug(
+                    volume=[self.name, vname, True, volume.attrs["Options"]["device"]]
+                )
 
-    def stop_container(self, name, image, force=False, command=None):
+    def stop_container(
+        self,
+        name: str,
+        image: str,
+        force: bool = False,
+        command: Optional[Union[Command, FakeCommand]] = None,
+    ):
         """Stops and removes the container.
 
         Parameters
         ----------
-        name : str
+        name
             The name to assign to the container.
-        image : str
+        image
             The image to run.
-        force : bool
+        force
             If `True`, removes any stopped containers of the same name or
             with the same image as ancestor.
-        command : ~clu.command.Command
+        command
             A command to which output messages.
-
         """
 
         command = command or FakeCommand()
 
-        base_image = image.split(':')[0]
+        base_image = image.split(":")[0]
 
         # Silently remove any exited containers that match the name or image
         # TODO: In the future we may want to restart them instead.
-        exited_containers = self.client.containers.list(
-            all=True, filters={'name': name, 'status': 'exited'})
+        exited_containers: List[Any] = self.client.containers.list(
+            all=True, filters={"name": name, "status": "exited"}
+        )
 
         if len(exited_containers) > 0:
             map(lambda c: c.remove(v=False, force=True), exited_containers)
 
         if force:
-            ancestors = self.client.containers.list(
-                all=True, filters={'ancestor': base_image})
+            ancestors: List[Any] = self.client.containers.list(
+                all=True, filters={"ancestor": base_image}
+            )
             for container in ancestors:
                 command.warning(
-                    text=f'{self.name}: removing container '
-                         f'({container.name}, {container.short_id}) '
-                         f'that uses image {base_image}.')
+                    text=f"{self.name}: removing container "
+                    f"({container.name}, {container.short_id}) "
+                    f"that uses image {base_image}."
+                )
                 container.remove(v=False, force=True)
 
-        name_containers = self.client.containers.list(
-            all=True, filters={'name': name, 'status': 'running'})
+        name_containers: List[Any] = self.client.containers.list(
+            all=True,
+            filters={"name": name, "status": "running"},
+        )
         if len(name_containers) > 0:
             container = name_containers[0]
-            command.warning(text=f'{self.name}: removing running '
-                                 f'container {name}.')
+            command.warning(text=f"{self.name}: removing running " f"container {name}.")
             container.remove(v=False, force=True)
-            command.debug(container=[self.name, 'NA'])
+            command.debug(container=[self.name, "NA"])
 
-    def run_container(self, name, image, volumes=[], privileged=False,
-                      registry=None, envs={}, ports=[], force=False,
-                      command=None):
+    def run_container(
+        self,
+        name: str,
+        image: str,
+        volumes: List[Any] = [],
+        privileged: bool = False,
+        registry: Optional[Any] = None,
+        envs: Dict[str, Any] = {},
+        ports: Union[List[int], Dict[str, Tuple[str, int]]] = [],
+        force: bool = False,
+        command: Optional[Union[Command, FakeCommand]] = None,
+    ):
         """Runs a container in the node, in detached mode.
 
         Parameters
         ----------
-        name : str
+        name
             The name to assign to the container.
-        image : str
+        image
             The image to run.
-        volumes : list
+        volumes
             Names of the volumes to mount. The mount point in the container
             will match the original device. The volumes must already exist
             in the node Docker engine.
-        privileged : bool
+        privileged
             Whether to run the container in privileged mode.
-        registry : bool
+        registry
             The registry from which to pull the image, if it doesn't exist
             locally.
-        envs : dict
+        envs
             A dictionary of environment variable to value to pass to the
             container.
-        ports : dict or list
+        ports
             Ports to bind inside the container. The format must be
             ``{'2222/tcp': 3333}`` which will expose port 2222 inside the
             container as port 3333 on the node. Also accepted is a list of
             integers; each integer port will be exposed in the container
             and bound to the same port in the node.
-        force : bool
+        force
             If `True`, removes any running containers of the same name,
             or any container with the same image as ancestor.
-        command : ~clu.command.Command
+        command
             A command to which output messages.
 
         Returns
         -------
         :
             The container object.
-
         """
 
         # This is the command we aim to run.
@@ -277,58 +316,66 @@ class Node(object):
         command = command or FakeCommand()
 
         if self.is_container_running(name) and not force:
-            command.debug(text=f'{self.name}: container already running.')
+            command.debug(text=f"{self.name}: container already running.")
             return
 
         self.stop_container(name, image, force=force, command=command)
 
         if registry:
-            image = registry + '/' + image
+            image = registry + "/" + image
 
         if isinstance(ports, (list, tuple)):
-            ports = {f'{port}/tcp': ('0.0.0.0', port) for port in ports}
+            ports = {f"{port}/tcp": ("0.0.0.0", port) for port in ports}
 
         mounts = []
         for vname in volumes:
             volume = self.client.volumes.get(vname)
-            target = volume.attrs['Options']['device'].strip(':')
+            target = volume.attrs["Options"]["device"].strip(":")
             mounts.append(types.Mount(target, vname))
 
-        command.debug(text=f'{self.name}: pulling latest image.')
+        command.debug(text=f"{self.name}: pulling latest image.")
         self.client.images.pull(image)
 
-        command.info(text=f'{self.name}: running {name} from {image}.')
-        container = self.client.containers.run(image,
-                                               name=name,
-                                               tty=False,
-                                               detach=True,
-                                               remove=True,
-                                               environment=envs,
-                                               ports=ports,
-                                               privileged=privileged,
-                                               mounts=mounts,
-                                               stdin_open=False,
-                                               stdout=False)
+        command.info(text=f"{self.name}: running {name} from {image}.")
+        container = self.client.containers.run(
+            image,
+            name=name,
+            tty=False,
+            detach=True,
+            remove=True,
+            environment=envs,
+            ports=ports,
+            privileged=privileged,
+            mounts=mounts,
+            stdin_open=False,
+            stdout=False,
+        )
 
         return container
 
-    def create_volume(self, name, driver='local', opts={}, force=False,
-                      command=None):
+    def create_volume(
+        self,
+        name: str,
+        driver: str = "local",
+        opts: Dict[str, Any] = {},
+        force: bool = False,
+        command: Optional[Union[Command, FakeCommand]] = None,
+    ):
         """Creates a volume in the node Docker engine.
 
         Parameters
         ----------
-        name : str
+        name
             The name of the volume to create.
-        driver : str
+        driver
             The driver to use.
-        opts : dict
+        opts
             A dict of key-values with the options to pass to the volume when
             creating it.
-        force : bool
+        force
             If `True`, and the volume already exists, removes it and
             creates it anew.
-        command : ~clu.command.Command
+        command
             A command to which output messages.
 
         Returns
@@ -348,21 +395,17 @@ class Node(object):
 
         command = command or FakeCommand()
 
-        volume = self.get_volume(name)
+        volume: Any = self.get_volume(name)
         if volume is not False:
             if not force:
-                command.debug(text=f'{self.name}: volume {name} '
-                              'already exists.')
-                return
-            command.warning(text=f'{self.name}: recreating existing '
-                            f'volume {name}.')
+                command.debug(text=f"{self.name}: volume {name} " "already exists.")
+                return volume
+            command.warning(text=f"{self.name}: recreating existing " f"volume {name}.")
             volume.remove(force=True)
 
-        volume = self.client.volumes.create(name, driver=driver,
-                                            driver_opts=opts)
+        volume = self.client.volumes.create(name, driver=driver, driver_opts=opts)
 
-        command.debug(text=f'{self.name}: creating volume {name}.')
-        command.debug(volume=[self.name, name, True,
-                              volume.attrs['Options']['device']])
+        command.debug(text=f"{self.name}: creating volume {name}.")
+        command.debug(volume=[self.name, name, True, volume.attrs["Options"]["device"]])
 
-        return
+        return volume

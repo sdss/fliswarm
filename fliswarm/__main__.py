@@ -16,35 +16,39 @@ from sdsstools.daemonizer import DaemonGroup, cli_coro
 from fliswarm.actor import FLISwarmActor
 
 
-@click.group(cls=DefaultGroup, default='actor', default_if_no_args=True)
-@click.option('-c', '--config', type=click.Path(exists=True, dir_okay=False),
-              help='Path to an external configuration file.')
+@click.group(cls=DefaultGroup, default="actor", default_if_no_args=True)
+@click.option(
+    "-c",
+    "--config",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Path to an external configuration file.",
+)
 @click.pass_obj
 def fliswarm(obj, config):
     """CLI for the fliswarm actor."""
 
-    obj['config'] = config
+    obj["config"] = config
 
 
-@fliswarm.group(cls=DaemonGroup, prog='actor', workdir=os.getcwd())
+@fliswarm.group(cls=DaemonGroup, prog="actor", workdir=os.getcwd())
 @click.pass_obj
 @cli_coro()
 async def actor(obj):
     """Start/stop the actor as a daemon."""
 
-    config = obj['config']
+    config = obj["config"]
 
     if config is None:
         cdir = os.path.dirname(__file__)
-        config = os.path.join(cdir, 'etc/fliswarm.yaml')
+        config = os.path.join(cdir, "etc/fliswarm.yaml")
 
     actor = await FLISwarmActor.from_config(config).start()
-    await actor.run_forever()
+    await actor.run_forever()  # type: ignore
 
 
 def main():
     fliswarm(obj={})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

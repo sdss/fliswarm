@@ -6,42 +6,49 @@
 # @Filename: tools.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-__all__ = ['select_nodes', 'FakeCommand', 'IDPool']
+__all__ = ["select_nodes", "FakeCommand", "IDPool"]
+
+from typing import Any, Dict, List, Optional, Set, Union
+
+import fliswarm.node
 
 
-def select_nodes(nodes, category=None, names=None):
+def select_nodes(
+    nodes: Dict[str, Any],
+    category: Optional[str] = None,
+    names: Optional[Union[str, List[str]]] = None,
+) -> Set["fliswarm.node.Node"]:
     """Filters the nodes to command.
 
     Parameters
     ----------
-    nodes : dict
+    nodes
         A dictionary of `.Node` instances to be filtered, keyed by node name.
-    category : str
+    category
         A category on which to filter.
-    names : str or list
+    names
         A list or comma-separated string of node names on which to filter.
 
     Returns
     -------
-    `set`
+    :
         A `set` of enabled `.Node` instances that match the provided
         ``category`` or ``names``. If neither ``category`` or ``names``
         are defined, returns all the ``nodes``.
-
     """
 
     if names and isinstance(names, str):
-        names = list(map(lambda x: x.strip(), names.split(',')))
+        names = list(map(lambda x: x.strip(), names.split(",")))
 
     valid_nodes = set()
 
     if names:
-        valid_nodes |= set([node for node in nodes.values()
-                           if node.name in names])
+        valid_nodes |= set([node for node in nodes.values() if node.name in names])
 
     if category:
-        valid_nodes |= set([node for node in nodes.values()
-                           if node.category in category])
+        valid_nodes |= set(
+            [node for node in nodes.values() if node.category in category]
+        )
 
     if not names and not category:
         valid_nodes |= set(nodes.values())
@@ -57,6 +64,7 @@ class FakeCommand:
     def __getattr__(self, item):
         def fake_method(*args, **kwargs):
             pass
+
         return fake_method
 
 
@@ -65,8 +73,8 @@ class IDPool:
 
     def __init__(self):
 
-        self.emitted = set()
-        self.returned = set()
+        self.emitted: Set[int] = set()
+        self.returned: Set[int] = set()
 
     def get(self):
         """Returns an ID."""
@@ -84,7 +92,7 @@ class IDPool:
         self.returned.add(id)
         return id
 
-    def put(self, id):
+    def put(self, id: int):
         """Returns an ID to the pool."""
 
         self.returned.add(id)

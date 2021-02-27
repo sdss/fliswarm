@@ -11,6 +11,7 @@ import json
 import os
 
 import pytest
+
 from clu.testing import TestCommand, setup_test_actor
 
 import fliswarm.actor
@@ -24,10 +25,16 @@ def mock_write(self, message):
     command_id = int(message.split()[0])
 
     for reply in self.replies:
-        message = json.dumps({'header': {'message_code': reply[0],
-                                         'sender': self.name,
-                                         'command_id': command_id},
-                              'data': reply[1]})
+        message = json.dumps(
+            {
+                "header": {
+                    "message_code": reply[0],
+                    "sender": self.name,
+                    "command_id": command_id,
+                },
+                "data": reply[1],
+            }
+        )
         asyncio.create_task(self.process_message(message))
 
 
@@ -35,21 +42,21 @@ def mock_write(self, message):
 def mock_docker(mocker):
     """Mock the docker Python module."""
 
-    mocker.patch.object(asyncio, 'sleep')
-    mocker.patch.object(fliswarm.actor.FlicameraDevice, 'start')
+    mocker.patch.object(asyncio, "sleep")
+    mocker.patch.object(fliswarm.actor.FlicameraDevice, "start")
 
-    docker_mock = mocker.patch('fliswarm.node.DockerClient')
+    docker_mock = mocker.patch("fliswarm.node.DockerClient")
 
     docker_client = mocker.MagicMock()
     docker_mock.return_value = docker_client
 
     volume = mocker.MagicMock()
-    volume.name = 'data'
-    volume.attrs = {'Options': {'device': ':/data'}}
+    volume.name = "data"
+    volume.attrs = {"Options": {"device": ":/data"}}
 
     container = mocker.MagicMock()
-    container.name = 'flicamera-gfa1'
-    container.short_id = 'abcd'
+    container.name = "flicamera-gfa1"
+    container.short_id = "abcd"
 
     docker_client.volumes.list.return_value = [volume]
     docker_client.volumes.create.return_value = volume
@@ -64,18 +71,19 @@ def mock_docker(mocker):
 def mock_ping(mocker):
     """Mock the docker Python module."""
 
-    yield mocker.patch.object(Node, 'ping')
+    yield mocker.patch.object(Node, "ping")
 
 
 @pytest.fixture(autouse=True)
 def mock_asyncio_server(mocker):
     """Mock the docker Python module."""
 
-    mocker.patch('asyncio.start_server')
+    mocker.patch("asyncio.start_server")
 
-    mocker.patch.object(fliswarm.actor.FlicameraDevice, 'write', new=mock_write)
-    mocker.patch.object(fliswarm.actor.FlicameraDevice, 'is_connected',
-                        return_value=True)
+    mocker.patch.object(fliswarm.actor.FlicameraDevice, "write", new=mock_write)
+    mocker.patch.object(
+        fliswarm.actor.FlicameraDevice, "is_connected", return_value=True
+    )
     fliswarm.actor.FlicameraDevice.replies = []
 
     yield
@@ -84,8 +92,7 @@ def mock_asyncio_server(mocker):
 @pytest.fixture()
 async def actor():
 
-    _actor = FLISwarmActor.from_config(os.path.dirname(__file__) +
-                                       '/fliswarm.yaml')
+    _actor = FLISwarmActor.from_config(os.path.dirname(__file__) + "/fliswarm.yaml")
     await _actor.start()
 
     _actor = await setup_test_actor(_actor)
