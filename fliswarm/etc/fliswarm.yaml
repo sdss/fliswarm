@@ -58,7 +58,7 @@ volumes:
         opts:
             type: nfs
             o: nfsvers=4,addr=sdss-hub,ro
-            device: :/home/albireo
+            device: :/home/sdss5
     data:
         driver: local
         opts:
