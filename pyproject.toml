@@ -30,9 +30,9 @@ fliswarm = "fliswarm.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.8"
 sdsstools = ">=0.4.0"
-click = "^7.1.2"
-docker = "^4.3.1"
-sdss-clu = "^0.5.2"
+click = "^8.0.0"
+docker = "^5.0.0"
+sdss-clu = "^1.0.0"
 click-default-group = "^1.2.2"
 daemonocle = "^1.0.2"
 
@@ -51,9 +51,9 @@ codecov = ">=2.0.15"
 coverage = {version = ">=5.0", extras = ["toml"]}
 ipdb = ">=0.12.3"
 rstcheck = "^3.3.1"
-Sphinx = "^3.0.0"
+Sphinx = "^4.0.0"
 autopep8 = "^1.5.4"
-sphinx-click = "^2.3.0"
+sphinx-click = "^3.0.0"
 sphinx-copybutton = "^0.3.1"
 black = {version = "^20.8b1", allow-prereleases = true}
 
