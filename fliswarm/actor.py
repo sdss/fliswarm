@@ -17,7 +17,7 @@ import click
 from clu import BaseActor, Command
 from clu.device import Device
 from clu.legacy import LegacyActor
-from clu.parser import command_parser
+from clu.parsers.click import command_parser
 from clu.tools import CommandStatus
 
 from . import __version__
