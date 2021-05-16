@@ -174,7 +174,10 @@ class FLISwarmActor(LegacyActor):
         for node in self.nodes.values():
 
             self.flicameras[node.name] = FlicameraDevice(
-                node.name, node.addr, self.config["nodes"][node.name]["port"], self
+                node.name,
+                node.addr,
+                self.config["nodes"][node.name]["port"],
+                self,
             )
 
             if node.is_container_running(self.get_container_name(node)):
@@ -315,9 +318,7 @@ async def reconnect(
         if device.is_connected():
             port = device.port
             node.report_status(command)
-            command.debug(
-                text=f"{node.name}: reconnected to " f"device on port {port}."
-            )
+            command.debug(text=f"{node.name}: reconnected to device on port {port}.")
         else:
             command.warning(text=f"{node.name}: failed to connect to device.")
 

@@ -67,7 +67,7 @@ class Node:
         if not self.ping():
             raise ConnectionError(f"Node {self.addr} is not responding.")
 
-        self.client = DockerClient(self.daemon_addr, timeout=1)
+        self.client = DockerClient(self.daemon_addr, timeout=3)
 
     @property
     def connected(self) -> bool:
@@ -188,9 +188,7 @@ class Node:
             for vname in config["volumes"]:
                 volume: Any = self.get_volume(vname)
                 if volume is False:
-                    command.warning(
-                        text=f"Volume {vname} not present " f"in {self.name}."
-                    )
+                    command.warning(text=f"Volume {vname} not present in {self.name}.")
                     command.debug(volume=[self.name, vname, False, "NA"])
                     continue
                 command.debug(
@@ -226,11 +224,11 @@ class Node:
         # Silently remove any exited containers that match the name or image
         # TODO: In the future we may want to restart them instead.
         exited_containers: List[Any] = self.client.containers.list(
-            all=True, filters={"name": name, "status": "exited"}
+            all=True, filters={"name": name}
         )
 
         if len(exited_containers) > 0:
-            map(lambda c: c.remove(v=False, force=True), exited_containers)
+            list(map(lambda c: c.remove(v=False, force=True), exited_containers))
 
         if force:
             ancestors: List[Any] = self.client.containers.list(
@@ -250,7 +248,7 @@ class Node:
         )
         if len(name_containers) > 0:
             container = name_containers[0]
-            command.warning(text=f"{self.name}: removing running " f"container {name}.")
+            command.warning(text=f"{self.name}: removing running container {name}.")
             container.remove(v=False, force=True)
             command.debug(container=[self.name, "NA"])
 
@@ -400,7 +398,7 @@ class Node:
             if not force:
                 command.debug(text=f"{self.name}: volume {name} " "already exists.")
                 return volume
-            command.warning(text=f"{self.name}: recreating existing " f"volume {name}.")
+            command.warning(text=f"{self.name}: recreating existing volume {name}.")
             volume.remove(force=True)
 
         volume = self.client.volumes.create(name, driver=driver, driver_opts=opts)
