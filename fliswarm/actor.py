@@ -169,8 +169,6 @@ class FLISwarmActor(LegacyActor):
     async def start(self) -> BaseActor:
         """Starts the actor."""
 
-        await super().start()
-
         self.connect_nodes()
 
         for node in self.nodes.values():
@@ -194,7 +192,7 @@ class FLISwarmActor(LegacyActor):
 
         self.parser_args = [self.nodes]
 
-        return self
+        return await super().start()
 
     def get_container_name(self, node: Node):
         """Returns the name of the container for a node."""
@@ -312,9 +310,6 @@ async def reconnect(
 
         container_name = config["container_name"] + f"-{node.name}"
         if not node.is_container_running(container_name):
-            command.warning(
-                text=f"{node.name}: container is not running after reconnect."
-            )
             continue
 
         device = command.actor.flicameras[node.name]
