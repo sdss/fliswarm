@@ -113,7 +113,7 @@ class FlicameraDevice(Device):
             # modified message code.
             dev_command = self.running_commands[command_id]
             if len(data) > 0:
-                dev_command.write(message_code, data)
+                dev_command.write(message_code, data, validate=False)
 
             # Update the device command with the real message code of the
             # received message. Do it with silent=True to avoid CLU
@@ -126,9 +126,14 @@ class FlicameraDevice(Device):
                 self.running_commands.pop(command_id)
                 self.id_pool.put(command_id)
 
-        else:  # This should not happen, but https://xkcd.com/2200/.
+        else:  # This should only happen for broadcasts.
             if len(data) > 0:
-                self.fliswarm_actor.write(message_code, data, broadcast=True)
+                self.fliswarm_actor.write(
+                    message_code,
+                    data,
+                    broadcast=True,
+                    validate=False,
+                )
 
 
 class FLISwarmActor(LegacyActor):
@@ -163,7 +168,7 @@ class FLISwarmActor(LegacyActor):
         for node in self.nodes.values():
             try:
                 node.connect()
-            except BaseException:
+            except ConnectionError:
                 pass
 
     async def start(self) -> BaseActor:
