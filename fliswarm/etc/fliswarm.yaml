@@ -1,6 +1,6 @@
 actor:
     name: fliswarm
-    host: 127.0.0.1
+    host: 0.0.0.0
     port: 19996
     tron_host: sdss-hub
     tron_port: 6093
