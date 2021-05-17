@@ -137,7 +137,7 @@ class Node:
         If ``containers=True``, outputs the ``container`` keyword with
         format ``container={node_name, container_short_id}``. If
         ``volumes=True``, reports the ``volume`` keyword with format
-        ``volume={node_name, volume, exists, mount_point}``
+        ``volume={node_name, volume, ping, docker_client}``
         """
 
         status = [self.name, self.addr, self.daemon_addr, False, False]
@@ -152,9 +152,7 @@ class Node:
         status[3] = True  # The NUC is responding.
 
         if not self.client or not self.client.ping():
-            command.warning(
-                text=f"Docker client on node {self.addr} " "is not connected."
-            )
+            command.warning(text=f"Docker client on node {self.addr} is not connected.")
             command.info(node=status)
             return
 
@@ -396,7 +394,7 @@ class Node:
         volume: Any = self.get_volume(name)
         if volume is not False:
             if not force:
-                command.debug(text=f"{self.name}: volume {name} " "already exists.")
+                command.debug(text=f"{self.name}: volume {name} already exists.")
                 return volume
             command.warning(text=f"{self.name}: recreating existing volume {name}.")
             volume.remove(force=True)
