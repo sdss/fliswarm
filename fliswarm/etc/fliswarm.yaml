@@ -2,6 +2,7 @@ actor:
     name: fliswarm
     host: 0.0.0.0
     port: 19996
+    verbose: 5
     tron_host: sdss-hub
     tron_port: 6093
     log_dir: /data/logs/actors/fliswarm
@@ -14,6 +15,8 @@ container_name: flicamera
 ping_timeout: 0.6
 
 reboot_command: sudo reboot
+
+enabled_nodes: [gfa3]
 
 nodes:
     gfa1:

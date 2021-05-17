@@ -180,14 +180,15 @@ class Node:
             command.warning(text=f"Node {self.addr} is not pinging back.")
             command.info(node=status)
             return
-        print("Pingged")
+
         status[3] = True  # The NUC is responding.
 
         if not (await self.client_alive()):
             command.warning(text=f"Docker client on node {self.addr} is not connected.")
             command.info(node=status)
+            self.client.close()
             return
-        print("client alive")
+
         status[4] = True
         command.info(node=status)
 
