@@ -13,40 +13,47 @@ container_name: flicamera
 
 ping_timeout: 0.1
 
-enabled_nodes: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
+reboot_command: sudo reboot
 
 nodes:
     gfa1:
+        user: sdss
         host: sdss-gfa1
         port: 19995
         docker-client: tcp://sdss-gfa1:2375
         category: gfa
     gfa2:
+        user: sdss
         host: sdss-gfa2
         port: 19995
         docker-client: tcp://sdss-gfa2:2375
         category: gfa
     gfa3:
+        user: sdss
         host: sdss-gfa3
         port: 19995
         docker-client: tcp://sdss-gfa3:2375
         category: gfa
     gfa4:
+        user: sdss
         host: sdss-gfa4
         port: 19995
         docker-client: tcp://sdss-gfa4:2375
         category: gfa
     gfa5:
+        user: sdss
         host: sdss-gfa5
         port: 19995
         docker-client: tcp://sdss-gfa5:2375
         category: gfa
     gfa6:
+        user: sdss
         host: sdss-gfa6
         port: 19995
         docker-client: tcp://sdss-gfa6:2375
         category: gfa
     fvc:
+        user: sdss
         host: sdss-fvc
         port: 19995
         docker-client: tcp://sdss-fvc:2375

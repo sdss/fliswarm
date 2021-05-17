@@ -146,6 +146,65 @@ async def reconnect(
 
 
 @command_parser.command()
+@click.option(
+    "--names",
+    "-n",
+    type=str,
+    help="Comma-separated nodes to reconnect.",
+)
+@click.option(
+    "--category",
+    "-c",
+    type=str,
+    help="Category of nodes to reconnect (gfa, fvc).",
+)
+@click.option(
+    "--hard",
+    "-f",
+    is_flag=True,
+    help="Reboots the NUC by power cycling it.",
+)
+async def reboot(
+    command: Command,
+    nodes: Dict[str, Node],
+    names: str,
+    category: str,
+    hard: bool,
+):
+    """Reboot the NUC computer(s)."""
+
+    config = command.actor.config
+
+    c_nodes = list(select_nodes(nodes, category, names))
+
+    if not hard:
+        cmds = []
+        for node in c_nodes:
+            user = config["nodes"][node.name]["user"]
+            host = config["nodes"][node.name]["host"]
+            cmds.append(
+                await asyncio.create_subprocess_shell(
+                    f"ssh {user}@{host} sudo reboot",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            )
+        await asyncio.gather(*[cmd.communicate() for cmd in cmds])
+        for ii, cmd in enumerate(cmds):
+            node = c_nodes[ii]
+            if cmd.returncode and cmd.returncode in [0, 255]:
+                command.info(f"Restarting {node.addr}.")
+            else:
+                command.error(f"Failed rebooting {node.addr}.")
+
+    await Command(
+        "status",
+        actor=command.actor,
+        commander_id=command.actor.name,
+    ).parse()
+
+
+@command_parser.command()
 @click.argument("CAMERA-COMMAND", nargs=-1, type=str)
 @click.option(
     "--names",
