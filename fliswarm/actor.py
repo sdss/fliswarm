@@ -41,7 +41,7 @@ class FLISwarmActor(LegacyActor):
         self.nodes = {}
         self.flicameras = {}
 
-    def connect_nodes(self):
+    async def connect_nodes(self):
         """Connects to the nodes."""
 
         nconfig = self.config["nodes"]
@@ -58,14 +58,14 @@ class FLISwarmActor(LegacyActor):
 
         for node in self.nodes.values():
             try:
-                node.connect()
+                await node.connect()
             except ConnectionError:
                 pass
 
     async def start(self) -> BaseActor:
         """Starts the actor."""
 
-        self.connect_nodes()
+        await self.connect_nodes()
 
         for node in self.nodes.values():
 
@@ -76,7 +76,7 @@ class FLISwarmActor(LegacyActor):
                 self,
             )
 
-            if node.is_container_running(self.get_container_name(node)):
+            if await node.is_container_running(self.get_container_name(node)):
                 try:
                     await self.flicameras[node.name].start()
                 except OSError:

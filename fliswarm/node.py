@@ -6,15 +6,20 @@
 # @Filename: node.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import subprocess
+from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+import asyncio
+from functools import partial
 
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import docker.errors
+import requests
 from docker import DockerClient, types
 
 from clu.command import Command
 
-from .tools import FakeCommand
+from .tools import FakeCommand, subprocess_run_async
 
 
 DEFAULT_DOCKER_PORT = 2375
@@ -51,41 +56,59 @@ class Node:
         self.addr = addr
         self.category = category
 
+        self.loop = asyncio.get_running_loop()
+
         if daemon_addr:
             self.daemon_addr = daemon_addr
         else:
             self.daemon_addr = f"tcp://{addr}:{DEFAULT_DOCKER_PORT}"
 
         self.registry = registry
-        self.client = None
+        self.client: DockerClient | None = None
 
         self.enabled = True
 
-    def connect(self):
+    async def _run(self, fn, *args, **kwargs):
+        """Run in executor."""
+
+        return await self.loop.run_in_executor(None, partial(fn, *args, **kwargs))
+
+    async def connect(self):
         """Connects to the Docker client on the remote node."""
 
-        if not self.ping():
+        if not await self.ping():
             raise ConnectionError(f"Node {self.addr} is not responding.")
 
-        self.client = DockerClient(self.daemon_addr, timeout=3)
+        self.client = await self._run(DockerClient, self.daemon_addr, timeout=3)
 
-    @property
-    def connected(self) -> bool:
+    async def client_alive(self) -> bool:
+        """Checks whether the Docker client is connected and pinging."""
+
+        if not self.client:
+            return False
+
+        try:
+            client_alive = await self._run(self.client.ping)
+            if client_alive:
+                return True
+            return False
+        except (requests.exceptions.ConnectionError, docker.errors.APIError):
+            return False
+
+    async def connected(self) -> bool:
         """Returns `True` if the node and the Docker client are connected."""
 
-        return cast(
-            bool,
-            self.enabled and self.ping() and self.client and self.client.ping(),
-        )
+        return self.enabled and (await self.ping()) and (await self.client_alive())
 
-    def is_container_running(self, name: str):
+    async def is_container_running(self, name: str):
         """Returns `True` if the container is running."""
 
         if not self.client:
             return False
 
-        containers = self.client.containers.list(
-            filters={"name": name, "status": "running"}
+        containers = await self._run(
+            self.client.containers.list,
+            filters={"name": name, "status": "running"},
         )
 
         if len(containers) == 1:
@@ -93,26 +116,35 @@ class Node:
 
         return False
 
-    def ping(self, timeout=0.2) -> bool:
+    async def ping(self, timeout=0.5) -> bool:
         """Pings the node. Returns `True` if the node is responding."""
 
-        ping = subprocess.run(
-            ["ping", "-c", "1", "-i", str(timeout), self.addr], capture_output=True
-        )
+        try:
+            ping = await asyncio.wait_for(
+                subprocess_run_async(
+                    f"ping -c 1 -w {timeout} {self.addr}",
+                    shell=True,
+                ),
+                timeout,
+            )
+            return True if ping.returncode == 0 else False
+        except asyncio.TimeoutError:
+            return False
 
-        return True if ping.returncode == 0 else False
-
-    def get_volume(self, name: str):
+    async def get_volume(self, name: str):
         """Returns the volume that matches the name, if it exists."""
 
-        volumes: List[Any] = self.client.volumes.list()
+        volumes: List[Any] = await self.loop.run_in_executor(
+            None,
+            self.client.volumes.list,
+        )
 
         for vol in volumes:
             if vol.name == name:
                 return vol
         return False
 
-    def report_status(
+    async def report_status(
         self,
         command: Command,
         volumes: bool = True,
@@ -144,18 +176,18 @@ class Node:
 
         config = command.actor.config
 
-        if not self.ping(timeout=config["ping_timeout"]):
+        if not (await self.ping(timeout=config["ping_timeout"])):
             command.warning(text=f"Node {self.addr} is not pinging back.")
             command.info(node=status)
             return
-
+        print("Pingged")
         status[3] = True  # The NUC is responding.
 
-        if not self.client or not self.client.ping():
+        if not (await self.client_alive()):
             command.warning(text=f"Docker client on node {self.addr} is not connected.")
             command.info(node=status)
             return
-
+        print("client alive")
         status[4] = True
         command.info(node=status)
 
@@ -165,7 +197,8 @@ class Node:
             if config["registry"]:
                 image = config["registry"] + "/" + image
 
-            container_list: List[Any] = self.client.containers.list(
+            container_list: List[Any] = await self._run(
+                self.client.containers.list,
                 all=True,
                 filters={"ancestor": image, "status": "running"},
             )
@@ -184,7 +217,7 @@ class Node:
 
         if volumes:
             for vname in config["volumes"]:
-                volume: Any = self.get_volume(vname)
+                volume: Any = await self.get_volume(vname)
                 if volume is False:
                     command.warning(text=f"Volume {vname} not present in {self.name}.")
                     command.debug(volume=[self.name, vname, False, "NA"])
@@ -193,7 +226,7 @@ class Node:
                     volume=[self.name, vname, True, volume.attrs["Options"]["device"]]
                 )
 
-    def stop_container(
+    async def stop_container(
         self,
         name: str,
         image: str,
@@ -221,16 +254,16 @@ class Node:
 
         # Silently remove any exited containers that match the name or image
         # TODO: In the future we may want to restart them instead.
-        exited_containers: List[Any] = self.client.containers.list(
-            all=True, filters={"name": name}
+        exited_containers: List[Any] = await self._run(
+            self.client.containers.list, all=True, filters={"name": name}
         )
 
         if len(exited_containers) > 0:
             list(map(lambda c: c.remove(v=False, force=True), exited_containers))
 
         if force:
-            ancestors: List[Any] = self.client.containers.list(
-                all=True, filters={"ancestor": base_image}
+            ancestors: List[Any] = await self._run(
+                self.client.containers.list, all=True, filters={"ancestor": base_image}
             )
             for container in ancestors:
                 command.warning(
@@ -240,7 +273,8 @@ class Node:
                 )
                 container.remove(v=False, force=True)
 
-        name_containers: List[Any] = self.client.containers.list(
+        name_containers: List[Any] = await self._run(
+            self.client.containers.list,
             all=True,
             filters={"name": name, "status": "running"},
         )
@@ -250,7 +284,7 @@ class Node:
             container.remove(v=False, force=True)
             command.debug(container=[self.name, "NA"])
 
-    def run_container(
+    async def run_container(
         self,
         name: str,
         image: str,
@@ -311,11 +345,11 @@ class Node:
 
         command = command or FakeCommand()
 
-        if self.is_container_running(name) and not force:
+        if (await self.is_container_running(name)) and not force:
             command.debug(text=f"{self.name}: container already running.")
             return
 
-        self.stop_container(name, image, force=force, command=command)
+        await self.stop_container(name, image, force=force, command=command)
 
         if registry:
             image = registry + "/" + image
@@ -325,15 +359,16 @@ class Node:
 
         mounts = []
         for vname in volumes:
-            volume = self.client.volumes.get(vname)
+            volume = await self._run(self.client.volumes.get, vname)
             target = volume.attrs["Options"]["device"].strip(":")
             mounts.append(types.Mount(target, vname))
 
         command.debug(text=f"{self.name}: pulling latest image.")
-        self.client.images.pull(image)
+        await self._run(self.client.images.pull, image)
 
         command.info(text=f"{self.name}: running {name} from {image}.")
-        container = self.client.containers.run(
+        container = await self._run(
+            self.client.containers.run,
             image,
             name=name,
             tty=False,
@@ -349,7 +384,7 @@ class Node:
 
         return container
 
-    def create_volume(
+    async def create_volume(
         self,
         name: str,
         driver: str = "local",
@@ -391,15 +426,20 @@ class Node:
 
         command = command or FakeCommand()
 
-        volume: Any = self.get_volume(name)
+        volume: Any = await self.get_volume(name)
         if volume is not False:
             if not force:
                 command.debug(text=f"{self.name}: volume {name} already exists.")
                 return volume
             command.warning(text=f"{self.name}: recreating existing volume {name}.")
-            volume.remove(force=True)
+            await self._run(volume.remove, force=True)
 
-        volume = self.client.volumes.create(name, driver=driver, driver_opts=opts)
+        volume = await self._run(
+            self.client.volumes.create,
+            name,
+            driver=driver,
+            driver_opts=opts,
+        )
 
         command.debug(text=f"{self.name}: creating volume {name}.")
         command.debug(volume=[self.name, name, True, volume.attrs["Options"]["device"]])

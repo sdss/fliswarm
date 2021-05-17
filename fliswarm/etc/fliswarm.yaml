@@ -11,7 +11,7 @@ registry: sdss-hub:5000
 image: flicamera:latest
 container_name: flicamera
 
-ping_timeout: 0.2
+ping_timeout: 0.6
 
 reboot_command: sudo reboot
 
