@@ -93,11 +93,11 @@ class Node:
 
         return False
 
-    def ping(self, timeout=0.1) -> bool:
+    def ping(self, timeout=0.2) -> bool:
         """Pings the node. Returns `True` if the node is responding."""
 
         ping = subprocess.run(
-            ["ping", "-c", "1", "-W", str(timeout), self.addr], capture_output=True
+            ["ping", "-c", "1", "-i", str(timeout), self.addr], capture_output=True
         )
 
         return True if ping.returncode == 0 else False
