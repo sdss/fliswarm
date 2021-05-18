@@ -88,11 +88,15 @@ class Node:
             return False
 
         try:
-            client_alive = await self._run(self.client.ping)
+            client_alive = await asyncio.wait_for(self._run(self.client.ping), 1)
             if client_alive:
                 return True
             return False
-        except (requests.exceptions.ConnectionError, docker.errors.APIError):
+        except (
+            requests.exceptions.ConnectionError,
+            docker.errors.APIError,
+            asyncio.TimeoutError,
+        ):
             return False
 
     async def connected(self) -> bool:
@@ -179,6 +183,8 @@ class Node:
         if not (await self.ping(timeout=config["ping_timeout"])):
             command.warning(text=f"Node {self.addr} is not pinging back.")
             command.info(node=status)
+            if self.client:
+                self.client.close()
             return
 
         status[3] = True  # The NUC is responding.
@@ -186,7 +192,8 @@ class Node:
         if not (await self.client_alive()):
             command.warning(text=f"Docker client on node {self.addr} is not connected.")
             command.info(node=status)
-            self.client.close()
+            if self.client:
+                self.client.close()
             return
 
         status[4] = True
