@@ -161,4 +161,4 @@ A valid configuration file, in YAML format, looks like
 
   commands
   Low-level reference<api>
-  Changelog <CHANGELOG>
+  changelog
