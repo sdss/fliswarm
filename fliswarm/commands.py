@@ -200,47 +200,38 @@ async def reboot(
             else:
                 command.error(f"Failed rebooting {node.addr}.")
     else:
-        jobs_off = []
-        for node in c_nodes:
-            if node.client:
-                node.client.close()
-            power_config = config["power"].copy()
-            power_config.update(config["nodes"][node.name].get("power", {}))
-            jobs_off.append(
-                command.actor.send_command(
-                    power_config["actor"],
-                    power_config["command"]["poweroff"]
-                    + " "
-                    + power_config.get("device", node.name),
-                )
-            )
-        command.info("Powering off computers.")
-        cmds = await asyncio.gather(*jobs_off)
-        if any([cmd.status.did_fail for cmd in cmds]):
-            return command.fail(
-                error="Failed commanding power cycling. "
-                "You will need to fix this problem manually."
-            )
 
+        async def execute(mode):
+            jobs = []
+            for node in c_nodes:
+                if mode == "off" and node.client:
+                    node.client.close()
+                power_config = config["power"].copy()
+                power_config.update(config["nodes"][node.name].get("power", {}))
+                jobs.append(
+                    command.actor.send_command(
+                        power_config["actor"],
+                        power_config["command"]["power" + mode]
+                        + " "
+                        + power_config.get("device", node.name),
+                    )
+                )
+            command.info(f"Powering {mode} computers.")
+            cmds = await asyncio.gather(*jobs)
+            if any([cmd.status.did_fail for cmd in cmds]):
+                return command.fail(
+                    error="Failed commanding power cycling. "
+                    "You will need to fix this problem manually."
+                )
+
+        # Run on and off commands.
+        await execute("off")
         await asyncio.sleep(3)
+        await execute("on")
 
-        command.info("Powering on computers.")
-        jobs_on = []
-        for node in c_nodes:
-            power_config = config["power"].copy()
-            power_config.update(config["nodes"][node.name].get("power", {}))
-            jobs_on.append(
-                command.actor.send_command(
-                    power_config["actor"],
-                    power_config["command"]["poweron"]
-                    + " "
-                    + power_config.get("device", node.name),
-                )
-            )
-        await asyncio.gather(*jobs_on)
+    await asyncio.sleep(5)
 
-    await asyncio.sleep(3)
-
+    # Issue a status
     await (
         await Command(
             "status",
