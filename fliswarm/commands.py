@@ -28,7 +28,7 @@ async def status(command: Command, nodes: Dict[str, Node]):
     command.info(enabledNodes=[node.name for node in enabled_nodes])
 
     for node in enabled_nodes:
-        node.report_status(command)
+        await node.report_status(command)
 
     command.finish()
 
@@ -63,13 +63,16 @@ async def reconnect(
 
     config = command.actor.config
 
-    def reconnect_node(node):
+    async def reconnect_node(node):
         """Reconnect sync. Will be run in an executor."""
 
         actor = command.actor
 
-        if not node.connected:
-            node.report_status(command)
+        try:
+            await node.connect()
+            if not (await node.connected()):
+                raise ConnectionError()
+        except ConnectionError:
             command.warning(
                 text=f"Node {node.name} is not pinging back or "
                 "the Docker daemon is not running. Try "
@@ -79,7 +82,7 @@ async def reconnect(
 
         # Stop container first, because we cannot remove volumes that are
         # attached to running containers.
-        node.stop_container(
+        await node.stop_container(
             config["container_name"] + f"-{node.name}",
             config["image"],
             force=force,
@@ -88,7 +91,7 @@ async def reconnect(
 
         for vname in config["volumes"]:
             vconfig = config["volumes"][vname]
-            node.create_volume(
+            await node.create_volume(
                 vname,
                 driver=vconfig["driver"],
                 opts=vconfig["opts"],
@@ -96,7 +99,7 @@ async def reconnect(
                 command=command,
             )
 
-        return node.run_container(
+        return await node.run_container(
             actor.get_container_name(node),
             config["image"],
             volumes=list(config["volumes"]),
@@ -118,10 +121,7 @@ async def reconnect(
         if device.is_connected():
             await device.stop()
 
-    loop = asyncio.get_event_loop()
-    await asyncio.gather(
-        *[loop.run_in_executor(None, reconnect_node, node) for node in c_nodes]
-    )
+    await asyncio.gather(*[reconnect_node(node) for node in c_nodes])
 
     command.info(text="Waiting 5 seconds before reconnecting the devices ...")
     await asyncio.sleep(5)
@@ -129,7 +129,7 @@ async def reconnect(
     for node in c_nodes:
 
         container_name = config["container_name"] + f"-{node.name}"
-        if not node.is_container_running(container_name):
+        if not (await node.is_container_running(container_name)):
             continue
 
         device = command.actor.flicameras[node.name]
@@ -137,12 +137,112 @@ async def reconnect(
 
         if device.is_connected():
             port = device.port
-            node.report_status(command)
+            await node.report_status(command)
             command.debug(text=f"{node.name}: reconnected to device on port {port}.")
         else:
             command.warning(text=f"{node.name}: failed to connect to device.")
 
     command.finish()
+
+
+@command_parser.command()
+@click.option(
+    "--names",
+    "-n",
+    type=str,
+    help="Comma-separated nodes to reconnect.",
+)
+@click.option(
+    "--category",
+    "-c",
+    type=str,
+    help="Category of nodes to reconnect (gfa, fvc).",
+)
+@click.option(
+    "--hard",
+    "-f",
+    is_flag=True,
+    help="Reboots the NUC by power cycling it.",
+)
+async def reboot(
+    command: Command,
+    nodes: Dict[str, Node],
+    names: str,
+    category: str,
+    hard: bool,
+):
+    """Reboot the NUC computer(s)."""
+
+    config = command.actor.config
+
+    c_nodes = list(select_nodes(nodes, category, names))
+
+    if not hard:
+        cmds = []
+        for node in c_nodes:
+            if node.client:
+                node.client.close()
+
+            user = config["nodes"][node.name]["user"]
+            host = config["nodes"][node.name]["host"]
+            cmds.append(
+                await asyncio.create_subprocess_shell(
+                    f"ssh {user}@{host} sudo reboot",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            )
+        await asyncio.gather(*[cmd.communicate() for cmd in cmds])
+        for ii, cmd in enumerate(cmds):
+            node = c_nodes[ii]
+            if cmd.returncode and cmd.returncode in [0, 255]:
+                command.info(f"Restarting {node.addr}.")
+            else:
+                command.error(f"Failed rebooting {node.addr}.")
+    else:
+
+        async def execute(mode):
+            jobs = []
+            for node in c_nodes:
+                if mode == "off" and node.client:
+                    node.client.close()
+                power_config = config["power"].copy()
+                power_config.update(config["nodes"][node.name].get("power", {}))
+                jobs.append(
+                    command.actor.send_command(
+                        power_config["actor"],
+                        power_config["command"]["power" + mode]
+                        + " "
+                        + power_config.get("device", node.name),
+                    )
+                )
+            command.info(f"Powering {mode} computers.")
+            cmds = await asyncio.gather(*jobs)
+            if any([cmd.status.did_fail for cmd in cmds]):
+                return command.fail(
+                    error="Failed commanding power cycling. "
+                    "You will need to fix this problem manually."
+                )
+
+        # Run on and off commands.
+        await execute("off")
+        await asyncio.sleep(3)
+        await execute("on")
+
+    await asyncio.sleep(5)
+
+    # Issue a status
+    await (
+        await Command(
+            "status",
+            actor=command.actor,
+            commander_id=command.actor.name,
+            parent=command,
+        ).parse()
+    )
+
+    # Do not finish the command because the child "status" will do that, but see
+    # sdss/clu#77.
 
 
 @command_parser.command()

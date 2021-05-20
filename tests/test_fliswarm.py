@@ -14,21 +14,21 @@ from fliswarm.node import Node
 pytestmark = [pytest.mark.asyncio]
 
 
-def test_node(mock_docker):
+async def test_node(mock_docker):
 
     node = Node("test-node", "fake-ip")
-    node.connect()
+    await node.connect()
 
     assert node.client is not None
     assert mock_docker.called_once()
 
 
-def test_actor(actor):
+async def test_actor(actor):
 
     assert actor is not None
     assert len(actor.nodes) > 0
 
-    assert actor.nodes["gfa1"].connected
+    assert await actor.nodes["gfa1"].connected()
 
 
 async def test_disable_enable(actor):

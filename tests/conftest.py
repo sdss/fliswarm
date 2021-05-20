@@ -84,7 +84,7 @@ def mock_asyncio_server(mocker):
     mocker.patch.object(
         fliswarm.actor.FlicameraDevice, "is_connected", return_value=True
     )
-    fliswarm.actor.FlicameraDevice.replies = []
+    fliswarm.actor.FlicameraDevice.replies = []  # type: ignore
 
     yield
 
@@ -93,9 +93,10 @@ def mock_asyncio_server(mocker):
 async def actor():
 
     _actor = FLISwarmActor.from_config(os.path.dirname(__file__) + "/fliswarm.yaml")
+    _actor.timed_commands.pop()
     await _actor.start()
 
-    _actor = await setup_test_actor(_actor)
+    _actor = await setup_test_actor(_actor)  # type: ignore
 
     yield _actor
 

@@ -6,11 +6,14 @@
 # @Filename: tools.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-__all__ = ["select_nodes", "FakeCommand", "IDPool"]
+import asyncio
 
 from typing import Any, Dict, List, Optional, Set, Union
 
 import fliswarm.node
+
+
+__all__ = ["select_nodes", "FakeCommand", "IDPool", "subprocess_run_async"]
 
 
 def select_nodes(
@@ -96,3 +99,30 @@ class IDPool:
         """Returns an ID to the pool."""
 
         self.returned.add(id)
+
+
+async def subprocess_run_async(*args, shell=False):
+    """Runs a command asynchronously.
+
+    If ``shell=True`` the command will be executed through the shell. In that case
+    the argument must be a single string with the full command. Otherwise, must receive
+    a list of program arguments. Returns the output of stdout.
+    """
+
+    if shell:
+        cmd = await asyncio.create_subprocess_shell(
+            args[0],
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+    else:
+        cmd = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+    await cmd.communicate()
+
+    return cmd
