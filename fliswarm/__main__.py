@@ -11,6 +11,7 @@ import os
 import click
 from click_default_group import DefaultGroup
 
+from sdsstools.configuration import read_yaml_file
 from sdsstools.daemonizer import DaemonGroup, cli_coro
 
 from fliswarm.actor import FLISwarmActor
@@ -23,11 +24,21 @@ from fliswarm.actor import FLISwarmActor
     type=click.Path(exists=True, dir_okay=False),
     help="Path to an external configuration file.",
 )
+@click.option(
+    "--nodes",
+    type=str,
+    help="Comma-separated nodes to connect.",
+)
 @click.pass_obj
-def fliswarm(obj, config):
+def fliswarm(obj, config=None, nodes=None):
     """CLI for the fliswarm actor."""
 
     obj["config"] = config
+
+    if nodes is not None:
+        nodes = list(map(lambda x: x.strip(), nodes.split(",")))
+
+    obj["nodes"] = nodes
 
 
 @fliswarm.group(cls=DaemonGroup, prog="actor", workdir=os.getcwd())
@@ -41,6 +52,10 @@ async def actor(obj):
     if config is None:
         cdir = os.path.dirname(__file__)
         config = os.path.join(cdir, "etc/fliswarm.yaml")
+
+    if obj["nodes"] is not None:
+        config = read_yaml_file(config)
+        config["enabled_nodes"] = obj["nodes"]
 
     actor = await FLISwarmActor.from_config(config).start()
     await actor.run_forever()  # type: ignore
