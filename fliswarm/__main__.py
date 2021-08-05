@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import os
+import warnings
 
 import click
 from click_default_group import DefaultGroup
@@ -47,6 +48,13 @@ def fliswarm(obj, config=None, nodes=None):
 async def actor(obj):
     """Start/stop the actor as a daemon."""
 
+    try:
+        observatory = os.environ["OBSERVATORY"]
+    except KeyError:
+        warnings.warn("$OBSERVATORY not set. Assuming APO.", UserWarning)
+        observatory = "APO"
+        os.environ["OBSERVATORY"] = "APO"
+
     config = obj["config"]
 
     if config is None:
@@ -55,7 +63,7 @@ async def actor(obj):
 
     if obj["nodes"] is not None:
         config = read_yaml_file(config)
-        config["enabled_nodes"] = obj["nodes"]
+        config["enabled_nodes"][observatory] = obj["nodes"]
 
     actor = await FLISwarmActor.from_config(config).start()
     await actor.run_forever()  # type: ignore

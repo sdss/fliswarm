@@ -46,7 +46,7 @@ class FLISwarmActor(LegacyActor):
     async def connect_nodes(self):
         """Connects to the nodes."""
 
-        nconfig = self.config["nodes"]
+        nconfig = self.config["nodes"][self.observatory]
 
         self.nodes = {
             name: Node(
@@ -55,7 +55,7 @@ class FLISwarmActor(LegacyActor):
                 daemon_addr=nconfig[name]["docker-client"],
                 category=nconfig[name].get("category", None),
             )
-            for name in self.config["enabled_nodes"]
+            for name in self.config["enabled_nodes"][self.observatory]
         }
 
         for node in self.nodes.values():
@@ -74,7 +74,7 @@ class FLISwarmActor(LegacyActor):
             self.flicameras[node.name] = FlicameraDevice(
                 node.name,
                 node.addr,
-                self.config["nodes"][node.name]["port"],
+                self.config["nodes"][self.observatory][node.name]["port"],
                 self,
             )
 

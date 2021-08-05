@@ -15,65 +15,67 @@ ping_timeout: 0.6
 
 reboot_command: sudo reboot
 
-enabled_nodes: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
+enabled_nodes:
+    APO: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6]
 
 nodes:
-    gfa1:
-        user: sdss
-        host: sdss-gfa1
-        port: 19995
-        docker-client: tcp://sdss-gfa1:2375
-        category: gfa
-        power:
-            device: nuc1
-    gfa2:
-        user: sdss
-        host: sdss-gfa2
-        port: 19995
-        docker-client: tcp://sdss-gfa2:2375
-        category: gfa
-        power:
-            device: nuc2
-    gfa3:
-        user: sdss
-        host: sdss-gfa3
-        port: 19995
-        docker-client: tcp://sdss-gfa3:2375
-        category: gfa
-        power:
-            device: nuc3
-    gfa4:
-        user: sdss
-        host: sdss-gfa4
-        port: 19995
-        docker-client: tcp://sdss-gfa4:2375
-        category: gfa
-        power:
-            device: nuc4
-    gfa5:
-        user: sdss
-        host: sdss-gfa5
-        port: 19995
-        docker-client: tcp://sdss-gfa5:2375
-        category: gfa
-        power:
-            device: nuc5
-    gfa6:
-        user: sdss
-        host: sdss-gfa6
-        port: 19995
-        docker-client: tcp://sdss-gfa6:2375
-        category: gfa
-        power:
-            device: gfa6
-    fvc:
-        user: sdss
-        host: sdss-fvc
-        port: 19995
-        docker-client: tcp://sdss-fvc:2375
-        category: fvc
-        power:
-            device: fvc
+    APO:
+        gfa1:
+            user: sdss
+            host: sdss-gfa1
+            port: 19995
+            docker-client: tcp://sdss-gfa1:2375
+            category: gfa
+            power:
+                device: nuc1
+        gfa2:
+            user: sdss
+            host: sdss-gfa2
+            port: 19995
+            docker-client: tcp://sdss-gfa2:2375
+            category: gfa
+            power:
+                device: nuc2
+        gfa3:
+            user: sdss
+            host: sdss-gfa3
+            port: 19995
+            docker-client: tcp://sdss-gfa3:2375
+            category: gfa
+            power:
+                device: nuc3
+        gfa4:
+            user: sdss
+            host: sdss-gfa4
+            port: 19995
+            docker-client: tcp://sdss-gfa4:2375
+            category: gfa
+            power:
+                device: nuc4
+        gfa5:
+            user: sdss
+            host: sdss-gfa5
+            port: 19995
+            docker-client: tcp://sdss-gfa5:2375
+            category: gfa
+            power:
+                device: nuc5
+        gfa6:
+            user: sdss
+            host: sdss-gfa6
+            port: 19995
+            docker-client: tcp://sdss-gfa6:2375
+            category: gfa
+            power:
+                device: gfa6
+        fvc:
+            user: sdss
+            host: sdss-fvc
+            port: 19995
+            docker-client: tcp://sdss-fvc:2375
+            category: fvc
+            power:
+                device: fvc
 
 power:
     actor: jaeger

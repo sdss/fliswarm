@@ -61,12 +61,14 @@ async def reconnect(
 ):
     """Recreates volumes and restarts the Docker containers."""
 
+    assert command.actor
     config = command.actor.config
 
     async def reconnect_node(node):
         """Reconnect sync. Will be run in an executor."""
 
         actor = command.actor
+        assert actor
 
         try:
             await node.connect()
@@ -105,7 +107,7 @@ async def reconnect(
             volumes=list(config["volumes"]),
             privileged=True,
             registry=config["registry"],
-            ports=[config["nodes"][node.name]["port"]],
+            ports=[config["nodes"][actor.observatory][node.name]["port"]],
             envs={"ACTOR_NAME": node.name, "OBSERVATORY": actor.observatory},
             force=force,
             command=command,
@@ -175,6 +177,8 @@ async def reboot(
 
     config = command.actor.config
 
+    observatory = command.actor.observatory
+
     c_nodes = list(select_nodes(nodes, category, names))
 
     if not hard:
@@ -183,8 +187,8 @@ async def reboot(
             if node.client:
                 node.client.close()
 
-            user = config["nodes"][node.name]["user"]
-            host = config["nodes"][node.name]["host"]
+            user = config["nodes"][observatory][node.name]["user"]
+            host = config["nodes"][observatory][node.name]["host"]
             cmds.append(
                 await asyncio.create_subprocess_shell(
                     f"ssh {user}@{host} sudo reboot",
@@ -207,7 +211,9 @@ async def reboot(
                 if mode == "off" and node.client:
                     node.client.close()
                 power_config = config["power"].copy()
-                power_config.update(config["nodes"][node.name].get("power", {}))
+                power_config.update(
+                    config["nodes"][observatory][node.name].get("power", {})
+                )
                 jobs.append(
                     command.actor.send_command(
                         power_config["actor"],
