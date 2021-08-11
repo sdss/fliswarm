@@ -6,7 +6,6 @@
 
 * [#1](https://github.com/sdss/fliswarm/issues/1) Implement NUC reboot commands.
 
-
 ### ✨ Improved
 
 * Nodes are now organised by observatory.
