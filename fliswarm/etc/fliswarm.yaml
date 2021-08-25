@@ -94,5 +94,5 @@ volumes:
         driver: local
         opts:
             type: nfs
-            o: nfsvers=4,addr=sdss-hub,rw
+            o: nfsvers=4,addr=10.25.1.230,rw
             device: :/data
