@@ -138,6 +138,8 @@ class Node:
     async def get_volume(self, name: str):
         """Returns the volume that matches the name, if it exists."""
 
+        assert self.client
+
         volumes: List[Any] = await self.loop.run_in_executor(
             None,
             self.client.volumes.list,
@@ -175,6 +177,9 @@ class Node:
         ``volumes=True``, reports the ``volume`` keyword with format
         ``volume={node_name, volume, ping, docker_client}``
         """
+
+        assert command.actor
+        assert self.client
 
         status = [self.name, self.addr, self.daemon_addr, False, False]
 
@@ -255,6 +260,8 @@ class Node:
         command
             A command to which output messages.
         """
+
+        assert self.client
 
         command = command or FakeCommand()
 
@@ -341,6 +348,8 @@ class Node:
         :
             The container object.
         """
+
+        assert self.client
 
         # This is the command we aim to run.
         # docker --context gfa1 run
@@ -431,6 +440,8 @@ class Node:
                                     'device=:/data'])
 
         """
+
+        assert self.client
 
         command = command or FakeCommand()
 

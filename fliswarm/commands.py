@@ -175,6 +175,8 @@ async def reboot(
 ):
     """Reboot the NUC computer(s)."""
 
+    assert command.actor
+
     config = command.actor.config
 
     observatory = command.actor.observatory
@@ -273,6 +275,8 @@ async def talk(
     category: str,
 ):
     """Sends a command to selected or all cameras."""
+
+    assert command.actor
 
     camera_command = " ".join(camera_command)
 
