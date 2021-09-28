@@ -56,7 +56,11 @@ autopep8 = ">=1.5.4"
 sphinx-click = ">=3.0.0"
 sphinx-copybutton = ">=0.3.1"
 black = {version = ">=21.0", allow-prereleases = true}
-myst-parser = "^0.14.0"
+myst-parser = ">=0.14.0"
+nox = ">=2021.6.12"
+sphinx-autobuild = ">=2021.3.14"
+sphinx-jsonschema = ">=1.16.11"
+furo = ">=2021.9.22"
 
 [tool.black]
 line-length = 88
