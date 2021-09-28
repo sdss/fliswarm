@@ -138,7 +138,7 @@ class Node:
     async def get_volume(self, name: str):
         """Returns the volume that matches the name, if it exists."""
 
-        assert self.client
+        assert self.client, "Client is not connected."
 
         volumes: List[Any] = await self.loop.run_in_executor(
             None,
@@ -179,7 +179,7 @@ class Node:
         """
 
         assert command.actor
-        assert self.client
+        assert self.client, "Client is not connected."
 
         status = [self.name, self.addr, self.daemon_addr, False, False]
 
@@ -261,7 +261,7 @@ class Node:
             A command to which output messages.
         """
 
-        assert self.client
+        assert self.client, "Client is not connected."
 
         command = command or FakeCommand()
 
@@ -349,7 +349,7 @@ class Node:
             The container object.
         """
 
-        assert self.client
+        assert self.client, "Client is not connected."
 
         # This is the command we aim to run.
         # docker --context gfa1 run
@@ -441,7 +441,7 @@ class Node:
 
         """
 
-        assert self.client
+        assert self.client, "Client is not connected."
 
         command = command or FakeCommand()
 
