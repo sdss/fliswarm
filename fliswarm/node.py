@@ -178,9 +178,6 @@ class Node:
         ``volume={node_name, volume, ping, docker_client}``
         """
 
-        assert command.actor
-        assert self.client, "Client is not connected."
-
         status = [self.name, self.addr, self.daemon_addr, False, False]
 
         config = command.actor.config
