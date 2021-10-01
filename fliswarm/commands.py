@@ -10,7 +10,7 @@
 import asyncio
 import glob as globlib
 import itertools
-
+import random as randomlib
 from typing import Dict, List
 
 import click
@@ -30,9 +30,6 @@ async def status(command: Command, nodes: Dict[str, Node]):
     command.info(enabledNodes=[node.name for node in enabled_nodes])
 
     for node in enabled_nodes:
-        if not node.client:
-            command.warning(text=f"Node {node.name} has no client.")
-            continue
         await node.report_status(command)
 
     command.finish()
@@ -359,8 +356,15 @@ async def enable(
 @command_parser.command()
 @click.argument("GLOB", type=str, required=False)
 @click.option("--delay", type=float, default=5, help="Delay between outputting images.")
+@click.option("--random", is_flag=True, help="Randomise images.")
 @cancellable()
-async def simulate(command: Command, nodes: Dict[str, Node], glob: str, delay=5.0):
+async def simulate(
+    command: Command,
+    nodes: Dict[str, Node],
+    glob: str,
+    delay=5.0,
+    random: bool = False,
+):
     """Simulate images being written to disk."""
 
     # We make GLOB not required so that --stop doesn't need to specify a path,
@@ -374,7 +378,10 @@ async def simulate(command: Command, nodes: Dict[str, Node], glob: str, delay=5.
     if len(images) == 0:
         return command.fail(error="No images found.")
 
-    images_cycle = itertools.cycle(globlib.glob(glob))
+    sample = globlib.glob(glob)
+    if random:
+        randomlib.shuffle(sample)
+    images_cycle = itertools.cycle(sample)
 
     while True:
         for node in nodes:
