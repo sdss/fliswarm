@@ -41,7 +41,7 @@ class FLISwarmActor(LegacyActor):
         self.nodes = {}
         self.flicameras = {}
 
-        self.timed_commands.add_command("status", delay=60)
+        self.timed_commands.add_command("status", delay=300)
 
     async def connect_nodes(self):
         """Connects to the nodes."""
