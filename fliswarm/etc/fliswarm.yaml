@@ -17,7 +17,7 @@ ping_timeout: 0.6
 reboot_command: sudo reboot
 
 enabled_nodes:
-  APO: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6]
+  APO: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
 
 nodes:
   APO:
