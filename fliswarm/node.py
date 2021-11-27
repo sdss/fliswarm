@@ -350,7 +350,7 @@ class Node:
 
         # This is the command we aim to run.
         # docker --context gfa1 run
-        #        --rm -d -p 19995:19995
+        #        --rm -d --network host
         #        --mount source=data,target=/data
         #        --mount source=home,target=/home/sdss
         #        --env OBSERVATORY=APO --env ACTOR_NAME=gfa
@@ -389,11 +389,12 @@ class Node:
             detach=True,
             remove=True,
             environment=envs,
-            ports=ports,
+            # ports=ports,
             privileged=privileged,
             mounts=mounts,
             stdin_open=False,
             stdout=False,
+            network="host",
         )
 
         return container
