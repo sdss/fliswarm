@@ -109,7 +109,11 @@ class FlicameraDevice(Device):
             # modified message code.
             dev_command = self.running_commands[command_id]
             if len(data) > 0:
-                dev_command.write(message_code, data, validate=False)
+                if "help" in data:
+                    for value in data["help"]:
+                        dev_command.write(message_code, {"help": value}, validate=False)
+                else:
+                    dev_command.write(message_code, data, validate=False)
 
             # Update the device command with the real message code of the
             # received message. Do it with silent=True to avoid CLU
