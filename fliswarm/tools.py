@@ -92,7 +92,7 @@ class IDPool:
         else:
             id = max(self.emitted) + 1
 
-        self.returned.add(id)
+        self.emitted.add(id)
         return id
 
     def put(self, id: int):
