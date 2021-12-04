@@ -44,21 +44,20 @@ def select_nodes(
         names = list(map(lambda x: x.strip(), names.split(",")))
 
     valid_nodes = set()
+    node_values = nodes.values()
 
     if names:
-        valid_nodes |= set([node for node in nodes.values() if node.name in names])
+        valid_nodes |= set([node for node in node_values if node.name in names])
 
     if category:
-        valid_nodes |= set(
-            [node for node in nodes.values() if node.category in category]
-        )
+        valid_nodes |= set([node for node in node_values if node.category in category])
 
     if not names and not category:
-        valid_nodes |= set(nodes.values())
+        valid_nodes |= set(node_values)
 
-    enabled_nodes = set([node for node in valid_nodes if node.enabled])
+    selected_nodes = set([node for node in valid_nodes if node.enabled])
 
-    return enabled_nodes
+    return selected_nodes
 
 
 class FakeCommand:

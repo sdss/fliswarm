@@ -343,20 +343,20 @@ async def disable(
 
 
 @command_parser.command()
-@click.argument("nodes_to_disable", metavar="NODES", nargs=-1, type=str)
+@click.argument("nodes_to_enable", metavar="NODES", nargs=-1, type=str)
 @click.option("-a", "--all", is_flag=True, help="Enable all nodes.")
 async def enable(
     command: Command,
     nodes: Dict[str, Node],
-    nodes_to_disable: List[str],
+    nodes_to_enable: List[str],
     all: bool,
 ):
     """Enables one or multiple cameras."""
 
     if all is True:
-        nodes_to_disable = list(nodes)
+        nodes_to_enable = list(nodes)
 
-    for name in nodes_to_disable:
+    for name in nodes_to_enable:
         if name not in nodes:
             command.warning(text=f"Cannot find node {name}.")
             continue
