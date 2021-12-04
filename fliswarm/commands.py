@@ -11,6 +11,7 @@ import asyncio
 import glob as globlib
 import itertools
 import random as randomlib
+
 from typing import Dict, List
 
 import click
@@ -283,7 +284,7 @@ async def talk(
     camera_command = " ".join(camera_command)
 
     c_nodes = select_nodes(nodes, category, names)
-    node_names = [node.name for node in c_nodes]
+    node_names = [node.name for node in c_nodes if node.enabled]
 
     flicameras = command.actor.flicameras
 
@@ -303,6 +304,17 @@ async def talk(
         dev_commands.append(flicameras[name].send_message(command, camera_command))
 
     await asyncio.gather(*dev_commands, return_exceptions=True)
+
+    # Check if the device commands returned "filename" keywords. If so,
+    # bundle them in a single keyword list that indicates all the filenames
+    # for exposures taken together.
+    filenames = []
+    for reply in command.replies:
+        if "filename" in reply.message:
+            filenames.append(reply.message["filename"][1]["filename"])
+
+    if len(filenames) > 0:
+        command.info(filename_bundle=filenames)
 
     command.finish()
 
