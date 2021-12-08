@@ -6,13 +6,14 @@
 # @Filename: commands.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
 
 import asyncio
 import glob as globlib
 import itertools
 import random as randomlib
 
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
 import click
 
@@ -21,6 +22,10 @@ from clu.parsers.click import cancellable, command_parser
 
 from .node import Node
 from .tools import select_nodes
+
+
+if TYPE_CHECKING:
+    from fliswarm.actor import FLISwarmActor
 
 
 @command_parser.command()
@@ -170,7 +175,7 @@ async def reconnect(
     help="Reboots the NUC by power cycling it.",
 )
 async def reboot(
-    command: Command,
+    command: Command[FLISwarmActor],
     nodes: Dict[str, Node],
     names: str,
     category: str,
@@ -178,7 +183,7 @@ async def reboot(
 ):
     """Reboot the NUC computer(s)."""
 
-    assert command.actor
+    assert command.actor is not None
 
     config = command.actor.config
 
@@ -211,6 +216,7 @@ async def reboot(
     else:
 
         async def execute(mode):
+            assert command.actor
             jobs = []
             for node in c_nodes:
                 if mode == "off" and node.client:
