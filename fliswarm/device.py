@@ -47,7 +47,11 @@ class FlicameraDevice(Device):
         """Restart the connection."""
 
         if self._client:
-            await self.stop()
+            try:
+                await self.stop()
+            except ConnectionResetError:
+                pass
+
         await self.start()
 
     def send_message(
