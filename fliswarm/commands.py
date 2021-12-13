@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Dict, List
 import click
 
 from clu.command import Command
-from clu.parsers.click import cancellable, command_parser
+from clu.parsers.click import command_parser
 
 from .node import Node
 from .tools import select_nodes
@@ -371,11 +371,10 @@ async def enable(
     command.finish()
 
 
-@command_parser.command()
+@command_parser.command(cancellable=True)
 @click.argument("GLOB", type=str, required=False)
 @click.option("--delay", type=float, default=5, help="Delay between outputting images.")
 @click.option("--random", is_flag=True, help="Randomise images.")
-@cancellable()
 async def simulate(
     command: Command,
     nodes: Dict[str, Node],
