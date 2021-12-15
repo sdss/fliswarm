@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 0.2.0 - December 14, 2021
 
 ### 🚀 New
 
@@ -12,9 +12,10 @@
 * Default image name is not `sdss/flicamera:latest`.
 * Add option to start `fliswarm` with only certain nodes from the CLI.
 * Run containers with `network="host"` to allow instances of FLIcamera access to Tron.
+* Initial operations testing at APO.
 
 
-## 0.1.0 November 11, 2020
+## 0.1.0 - November 11, 2020
 
 ### 🚀 New
 
