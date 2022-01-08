@@ -294,19 +294,16 @@ async def talk(
 
     flicameras = command.actor.flicameras
 
+    connected_nodes = []
     for name in node_names:
         if flicameras[name].is_connected():
+            connected_nodes.append(name)
             continue
-        command.warning(text=f"Reconnecting to {name} ...")
-        try:
-            await flicameras[name].restart()
-        except OSError:
-            command.fail(text=f"Unable to connect to {name}.")
-            return
+        command.warning(text=f"Failed connecting to {name}.")
 
     dev_commands = []
 
-    for name in node_names:
+    for name in connected_nodes:
         dev_commands.append(flicameras[name].send_message(command, camera_command))
 
     await asyncio.gather(*dev_commands, return_exceptions=True)
