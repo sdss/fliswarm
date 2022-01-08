@@ -95,7 +95,7 @@ async def reconnect(
         await node.stop_container(
             config["container_name"] + f"-{node.name}",
             config["image"],
-            force=force,
+            force=True,
             command=command,
         )
 
@@ -117,7 +117,7 @@ async def reconnect(
             registry=config["registry"],
             ports=[config["nodes"][actor.observatory][node.name]["port"]],
             envs={"ACTOR_NAME": node.name, "OBSERVATORY": actor.observatory},
-            force=force,
+            force=True,
             command=command,
         )
 
