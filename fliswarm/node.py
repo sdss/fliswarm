@@ -182,6 +182,10 @@ class Node:
 
         config = command.actor.config
 
+        if not self.client:
+            command.warning(f"Node {self.addr} has no client.")
+            return
+
         if not (await self.ping(timeout=config["ping_timeout"])):
             command.warning(text=f"Node {self.addr} is not pinging back.")
             command.info(node=status)
