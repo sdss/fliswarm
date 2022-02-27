@@ -95,5 +95,5 @@ volumes:
     driver: local
     opts:
       type: nfs
-      o: nfsvers=4,addr=10.25.1.230,rw
+      o: addr=10.25.1.230,rw,nolock,hard,nointr,nfsvers=3
       device: :/data
