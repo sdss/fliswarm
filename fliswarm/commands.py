@@ -361,8 +361,19 @@ async def enable(
 
     for name in nodes_to_enable:
         if name not in nodes:
-            command.warning(text=f"Cannot find node {name}.")
-            continue
+            # If the node is not in enabled_nodes it won't be in nodes. We add it.
+            config_nodes = command.actor.config["nodes"][command.actor.observatory]
+            if name not in config_nodes:
+                command.warning("Node does not exists.")
+                continue
+
+            nodes[name] = Node(
+                name,
+                config_nodes[name]["host"],
+                daemon_addr=config_nodes[name]["docker-client"],
+                category=config_nodes[name].get("category", None),
+            )
+
         nodes[name].enabled = True
 
     command.finish()
