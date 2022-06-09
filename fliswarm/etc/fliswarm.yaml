@@ -153,5 +153,5 @@ volumes:
     driver: local
     opts:
       type: nfs
-      o: addr=sdss-data,rw,nolock,hard,nointr,nfsvers=3
+      o: addr=sdss-data,rw,nolock,hard,nointr,nfsvers=4
       device: :/data
