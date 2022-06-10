@@ -36,6 +36,9 @@ class FLISwarmActor(LegacyActor):
 
         self.version = __version__
 
+        if self.model and self.model.schema:
+            self.model.schema["additionalProperties"] = True
+
         self.observatory = os.environ["OBSERVATORY"]
 
         self.nodes = {}

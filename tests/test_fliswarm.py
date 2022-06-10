@@ -53,7 +53,7 @@ async def test_disable_bad_name(actor):
     command = await actor.invoke_mock_command("disable bad_camera_name")
     assert command.status.did_succeed
 
-    assert actor.mock_replies[1]["text"] == '"Cannot find node/camera bad_camera_name."'
+    assert actor.mock_replies[1]["text"] == '"Cannot find node bad_camera_name."'
 
 
 async def test_enable_bad_name(actor):
@@ -61,7 +61,7 @@ async def test_enable_bad_name(actor):
     command = await actor.invoke_mock_command("enable bad_camera_name")
     assert command.status.did_succeed
 
-    assert actor.mock_replies[1]["text"] == '"Cannot find node/camera bad_camera_name."'
+    assert actor.mock_replies[1]["text"] == '"Node does not exist."'
 
 
 async def test_talk_status(actor):

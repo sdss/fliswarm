@@ -364,7 +364,7 @@ async def enable(
             # If the node is not in enabled_nodes it won't be in nodes. We add it.
             config_nodes = command.actor.config["nodes"][command.actor.observatory]
             if name not in config_nodes:
-                command.warning("Node does not exists.")
+                command.warning("Node does not exist.")
                 continue
 
             nodes[name] = Node(
