@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 - June 10, 2022
+
+### 🚀 New
+
+* Allow to use `force=True` when stopping or running a container.
+* Allow to force enabling a node that's not in `enabled_nodes`.
+* Add cameras and nodes for LCO.
+
+### 🏷️ Changed
+
+* Disabled GFA1 and 6 for APO.
+* Use `nfsvers=4` for `/data` volume.
+* Some engineering improvements.
+
+
 ## 0.2.0 - December 14, 2021
 
 ### 🚀 New
