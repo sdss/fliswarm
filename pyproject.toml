@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-fliswarm"
-version = "0.3.0"
+version = "0.3.1a0"
 description = "A tool to create and manage Docker instances of flicamera"
 authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
 license = "BSD-3-Clause"
