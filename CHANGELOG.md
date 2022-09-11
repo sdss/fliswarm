@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 - September 11, 2022
+
+### 🏷️ Changed
+
+* Re-enabled GFA1 and 6 for APO.
+
+
 ## 0.3.0 - June 10, 2022
 
 ### 🚀 New
