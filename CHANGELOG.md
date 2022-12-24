@@ -1,5 +1,13 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Bind `/dev/bus/usb` in the container, which ensures the camera can be connected without having to restart the container.
+* Increase CPU and memory allocation in the container.
+
+
 ## 0.3.1 - September 11, 2022
 
 ### 🏷️ Changed

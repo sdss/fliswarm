@@ -363,7 +363,7 @@ class Node:
 
         assert self.client, "Client is not connected."
 
-        # This is the command we aim to run.
+        # This is the command we aim to run (not a complete list).
         # docker --context gfa1 run
         #        --rm -d --network host
         #        --mount source=data,target=/data
@@ -392,6 +392,28 @@ class Node:
             target = volume.attrs["Options"]["device"].strip(":")
             mounts.append(types.Mount(target, vname))
 
+        # We need to bind /dev/bus/usb, which is where the USBs are mounted in
+        # the host NUC. This allows the container to access a new device when
+        # it becomes available. --privileged doesn't refresh the devices, it will
+        # be aware that a new device has been connected, but the file won't be there
+        # so it will fail when opening it. This allows a camera to be connected
+        # without having to recreate the container. We also provide access to
+        # the devices (this is probably unnecessary with privileged). I tried several
+        # things to avoid having to use privileged, but --cap-add SYS_ADMIN won't
+        # work, and anyway, the NUC is already an isolated system.
+        mounts.append(types.Mount("/dev/bus/usb", "/dev/bus/usb", type="bind"))
+        devices = ["/dev/bus/usb:/dev/bus/usb"]
+
+        # We give most of the resources in the host computer to the container since
+        # it's the only thing running. Honestly it doesn't seem to make a huge
+        # difference. cpu_period is the period of a single CPU (I think the value
+        # is arbitrary and only the ratio matters). The host has 4 CPUs so we assign
+        # 3.5 of their cycles to the container.
+        # https://docs.docker.com/config/containers/resource_constraints/
+        cpu_period = 10000
+        cpu_quota = 35000
+        mem_limit = "6G"
+
         command.debug(text=f"{self.name}: pulling latest image.")
         await self._run(self.client.images.pull, image)
 
@@ -404,12 +426,15 @@ class Node:
             detach=True,
             remove=True,
             environment=envs,
-            # ports=ports,
             privileged=privileged,
+            mem_limit=mem_limit,
+            cpu_period=cpu_period,
+            cpu_quota=cpu_quota,
             mounts=mounts,
             stdin_open=False,
             stdout=False,
             network="host",
+            devices=devices,
         )
 
         return container
