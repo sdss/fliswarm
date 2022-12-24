@@ -11,11 +11,12 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import docker.errors
 import requests
 from docker import DockerClient, types
+from docker.models.containers import Container
 
 from clu.command import Command
 
@@ -211,11 +212,12 @@ class Node:
             if config["registry"]:
                 image = config["registry"] + "/" + image
 
-            container_list: List[Any] = await self._run(
+            container_list = await self._run(
                 self.client.containers.list,
                 all=True,
                 filters={"ancestor": image, "status": "running"},
             )
+            container_list = cast(list[Container], container_list)
 
             if len(container_list) == 0:
                 command.warning(text=f"No containers running on {self.addr}.")
@@ -270,17 +272,24 @@ class Node:
 
         # Silently remove any exited containers that match the name or image
         # TODO: In the future we may want to restart them instead.
-        exited_containers: List[Any] = await self._run(
-            self.client.containers.list, all=True, filters={"name": name}
+        exited_containers = await self._run(
+            self.client.containers.list,
+            all=True,
+            filters={"name": name},
         )
+        exited_containers = cast(list[Container], exited_containers)
 
         if len(exited_containers) > 0:
             list(map(lambda c: c.remove(v=False, force=True), exited_containers))
 
         if force:
-            ancestors: List[Any] = await self._run(
-                self.client.containers.list, all=True, filters={"ancestor": base_image}
+            ancestors = await self._run(
+                self.client.containers.list,
+                all=True,
+                filters={"ancestor": base_image},
             )
+            ancestors = cast(list[Container], ancestors)
+
             for container in ancestors:
                 command.warning(
                     text=f"{self.name}: removing container "
@@ -289,11 +298,13 @@ class Node:
                 )
                 container.remove(v=False, force=True)
 
-        name_containers: List[Any] = await self._run(
+        name_containers = await self._run(
             self.client.containers.list,
             all=True,
             filters={"name": name, "status": "running"},
         )
+        name_containers = cast(list[Container], name_containers)
+
         if len(name_containers) > 0:
             container = name_containers[0]
             command.warning(text=f"{self.name}: removing running container {name}.")
