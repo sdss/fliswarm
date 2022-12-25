@@ -1,11 +1,15 @@
 # Changelog
 
-## Next version
+## 0.4.0 - December 24, 2022
 
 ### ✨ Improved
 
 * Bind `/dev/bus/usb` in the container, which ensures the camera can be connected without having to restart the container.
 * Increase CPU and memory allocation in the container.
+
+### 🏷️ Changed
+
+* APO now mounts `/data` from `sdss5-hub`.
 
 
 ## 0.3.1 - September 11, 2022
