@@ -52,7 +52,6 @@ class Node:
         daemon_addr: Optional[str] = None,
         registry: Optional[str] = None,
     ):
-
         self.name = name
         self.addr = addr
         self.category = category
@@ -207,7 +206,6 @@ class Node:
         command.info(node=status)
 
         if containers:
-
             image = config["image"].split(":")[0]
             if config["registry"]:
                 image = config["registry"] + "/" + image
@@ -217,7 +215,7 @@ class Node:
                 all=True,
                 filters={"ancestor": image, "status": "running"},
             )
-            container_list = cast(list[Container], container_list)
+            container_list = cast(List[Container], container_list)
 
             if len(container_list) == 0:
                 command.warning(text=f"No containers running on {self.addr}.")
@@ -277,7 +275,7 @@ class Node:
             all=True,
             filters={"name": name},
         )
-        exited_containers = cast(list[Container], exited_containers)
+        exited_containers = cast(List[Container], exited_containers)
 
         if len(exited_containers) > 0:
             list(map(lambda c: c.remove(v=False, force=True), exited_containers))
@@ -288,7 +286,7 @@ class Node:
                 all=True,
                 filters={"ancestor": base_image},
             )
-            ancestors = cast(list[Container], ancestors)
+            ancestors = cast(List[Container], ancestors)
 
             for container in ancestors:
                 command.warning(
@@ -303,7 +301,7 @@ class Node:
             all=True,
             filters={"name": name, "status": "running"},
         )
-        name_containers = cast(list[Container], name_containers)
+        name_containers = cast(List[Container], name_containers)
 
         if len(name_containers) > 0:
             container = name_containers[0]
