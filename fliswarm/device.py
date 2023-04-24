@@ -34,7 +34,6 @@ class FlicameraDevice(Device):
         port: int,
         fliswarm_actor: "FLISwarmActor",
     ):
-
         self.name = name
         self.fliswarm_actor = fliswarm_actor
         self.id_pool = IDPool()
@@ -49,7 +48,7 @@ class FlicameraDevice(Device):
         if self._client:
             try:
                 await self.stop()
-            except ConnectionResetError:
+            except (ConnectionResetError, OSError):
                 pass
 
         await self.start()
@@ -108,7 +107,6 @@ class FlicameraDevice(Device):
             data[key] = [sender] + data[key]
 
         if command_id in self.running_commands:
-
             # If the message has keywords, output them but using the
             # modified message code.
             dev_command = self.running_commands[command_id]

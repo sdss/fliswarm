@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Prevent `OSError` when restarting a device.
+
+
 ## 0.4.0 - December 24, 2022
 
 ### ✨ Improved
