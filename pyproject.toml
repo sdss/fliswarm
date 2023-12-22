@@ -63,12 +63,12 @@ ruff = ">=0.1.0"
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py312']
 fast = true
 
 [tool.ruff]
 line-length = 88
-target-version = 'py311'
+target-version = 'py312'
 select = ["E", "F", "I"]
 unfixable = ["F841"]
 exclude = ["**/_vendor"]
