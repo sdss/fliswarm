@@ -31,7 +31,6 @@ class FLISwarmActor(LegacyActor):
     parser = command_parser
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         self.version = __version__
@@ -73,7 +72,6 @@ class FLISwarmActor(LegacyActor):
         await self.connect_nodes()
 
         for node in self.nodes.values():
-
             self.flicameras[node.name] = FlicameraDevice(
                 node.name,
                 node.addr,

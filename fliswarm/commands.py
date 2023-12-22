@@ -137,7 +137,6 @@ async def reconnect(
     await asyncio.sleep(5)
 
     for node in c_nodes:
-
         container_name = config["container_name"] + f"-{node.name}"
         if not (await node.is_container_running(container_name)):
             continue

@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_node(mock_docker):
-
     node = Node("test-node", "fake-ip")
     await node.connect()
 
@@ -24,7 +23,6 @@ async def test_node(mock_docker):
 
 
 async def test_actor(actor):
-
     assert actor is not None
     assert len(actor.nodes) > 0
 
@@ -32,7 +30,6 @@ async def test_actor(actor):
 
 
 async def test_disable_enable(actor):
-
     command = await actor.invoke_mock_command("disable gfa1")
     assert command.status.did_succeed
     assert actor.nodes["gfa1"].enabled is False
@@ -49,7 +46,6 @@ async def test_disable_enable(actor):
 
 
 async def test_disable_bad_name(actor):
-
     command = await actor.invoke_mock_command("disable bad_camera_name")
     assert command.status.did_succeed
 
@@ -57,7 +53,6 @@ async def test_disable_bad_name(actor):
 
 
 async def test_enable_bad_name(actor):
-
     command = await actor.invoke_mock_command("enable bad_camera_name")
     assert command.status.did_succeed
 
@@ -65,7 +60,6 @@ async def test_enable_bad_name(actor):
 
 
 async def test_talk_status(actor):
-
     actor.flicameras["gfa1"].replies.append((":", {"text": "Camera not connected"}))
 
     command = await actor.invoke_mock_command("talk -n gfa1 status")
@@ -77,13 +71,11 @@ async def test_talk_status(actor):
 
 
 async def test_reconnect(actor):
-
     command = await actor.invoke_mock_command("reconnect --force")
     assert command.status.did_succeed
 
 
 async def test_status(actor):
-
     await actor.invoke_mock_command("disable --all")
     await actor.invoke_mock_command("enable gfa1")
 

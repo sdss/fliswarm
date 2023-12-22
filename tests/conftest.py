@@ -91,7 +91,6 @@ def mock_asyncio_server(mocker):
 
 @pytest.fixture()
 async def actor():
-
     _actor = FLISwarmActor.from_config(os.path.dirname(__file__) + "/fliswarm.yaml")
     _actor.timed_commands.pop()
     await _actor.start()
@@ -106,6 +105,5 @@ async def actor():
 
 @pytest.fixture
 async def command(actor):
-
     command = TestCommand(commander_id=1, actor=actor)
     yield command

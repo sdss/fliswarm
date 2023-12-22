@@ -74,7 +74,6 @@ class IDPool:
     """An ID pool that allows to return values to be reused."""
 
     def __init__(self):
-
         self.emitted: Set[int] = set()
         self.returned: Set[int] = set()
 
