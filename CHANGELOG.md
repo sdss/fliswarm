@@ -6,6 +6,11 @@
 
 * Prevent `OSError` when restarting a device.
 
+### ⚙️ Engineering
+
+* Support 3.12.
+* Lint using `ruff`.
+
 
 ## 0.4.0 - December 24, 2022
 
