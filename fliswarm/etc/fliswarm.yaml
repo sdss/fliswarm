@@ -17,7 +17,7 @@ ping_timeout: 0.6
 reboot_command: sudo reboot
 
 enabled_nodes:
-  APO: [gfa1, gfa2, gfa3, gfa5, gfa6, fvc]
+  APO: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
   LCO: [gfa1, gfa2, gfa3, gfa4, gfa5, gfa6, fvc]
 
 nodes:
@@ -46,14 +46,14 @@ nodes:
       category: gfa
       power:
         device: nuc3
-    # gfa4:
-    #   user: sdss
-    #   host: sdss-gfa3
-    #   port: 19994
-    #   docker-client: tcp://sdss-gfa3:2375
-    #   category: gfa
-    #   power:
-    #     device: nuc3
+    gfa4:
+      user: sdss
+      host: sdss-gfa4
+      port: 19994
+      docker-client: tcp://sdss-gfa4:2375
+      category: gfa
+      power:
+        device: nuc4
     gfa5:
       user: sdss
       host: sdss-gfa5
