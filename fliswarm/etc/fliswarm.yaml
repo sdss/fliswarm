@@ -49,7 +49,7 @@ nodes:
     gfa4:
       user: sdss
       host: sdss-gfa4
-      port: 19994
+      port: 19995
       docker-client: tcp://sdss-gfa4:2375
       category: gfa
       power:
