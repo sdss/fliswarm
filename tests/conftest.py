@@ -11,11 +11,10 @@ import json
 import os
 from unittest.mock import MagicMock
 
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
 import pytest
 from pytest_mock import MockerFixture
-from sphinx import TYPE_CHECKING
 
 from clu.testing import TestCommand, setup_test_actor
 
