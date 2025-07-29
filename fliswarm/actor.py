@@ -85,8 +85,7 @@ class FLISwarmActor(LegacyActor):
                 except OSError:
                     self.write(
                         "w",
-                        text=f"{node.name}: failed to connect to "
-                        f"the flicamera device.",
+                        text=f"{node.name}: failed to connect to the flicamera device.",
                     )
 
         self.parser_args = [self.nodes]
