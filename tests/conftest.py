@@ -9,14 +9,23 @@
 import asyncio
 import json
 import os
+from unittest.mock import MagicMock
+
+from typing import Generator
 
 import pytest
+from pytest_mock import MockerFixture
+from sphinx import TYPE_CHECKING
 
 from clu.testing import TestCommand, setup_test_actor
 
 import fliswarm.actor
 from fliswarm.actor import FLISwarmActor
 from fliswarm.node import Node
+
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
 
 
 def mock_write(self, message):
@@ -39,13 +48,14 @@ def mock_write(self, message):
 
 
 @pytest.fixture(autouse=True)
-def mock_docker(mocker):
+def mock_docker(mocker: MockerFixture) -> Generator[MagicMock, None, None]:
     """Mock the docker Python module."""
 
     mocker.patch.object(asyncio, "sleep")
     mocker.patch.object(fliswarm.actor.FlicameraDevice, "start")
 
     docker_mock = mocker.patch("fliswarm.node.DockerClient")
+    assert isinstance(docker_mock, MagicMock)
 
     docker_client = mocker.MagicMock()
     docker_mock.return_value = docker_client

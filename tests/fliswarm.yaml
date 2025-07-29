@@ -3,6 +3,7 @@ actor:
   host: 127.0.0.1
   port: 19996
   log_dir: False
+  additional_properties: True
 
 registry: sdss-hub:5000
 

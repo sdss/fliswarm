@@ -6,6 +6,8 @@
 # @Filename: test_fliswarm.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from fliswarm.node import Node
@@ -14,12 +16,12 @@ from fliswarm.node import Node
 pytestmark = [pytest.mark.asyncio]
 
 
-async def test_node(mock_docker):
+async def test_node(mock_docker: MagicMock):
     node = Node("test-node", "fake-ip")
     await node.connect()
 
     assert node.client is not None
-    assert mock_docker.called_once()
+    mock_docker.assert_called_once()
 
 
 async def test_actor(actor):
