@@ -72,7 +72,7 @@ async def reconnect(
     assert command.actor
     config = command.actor.config
 
-    async def reconnect_node(node):
+    async def reconnect_node(node: Node):
         """Reconnect sync. Will be run in an executor."""
 
         actor = command.actor
@@ -88,7 +88,7 @@ async def reconnect(
                 "the Docker daemon is not running. Try "
                 "rebooting the computer."
             )
-            return
+            return False
 
         # Stop container first, because we cannot remove volumes that are
         # attached to running containers.
@@ -131,7 +131,9 @@ async def reconnect(
         if device.is_connected():
             await device.stop()
 
-    await asyncio.gather(*[reconnect_node(node) for node in c_nodes])
+    results = await asyncio.gather(*[reconnect_node(node) for node in c_nodes])
+    if not all(results):
+        return command.fail(error="Failed to reconnect one or more nodes.")
 
     command.info(text="Waiting 5 seconds before reconnecting the devices ...")
     await asyncio.sleep(5)

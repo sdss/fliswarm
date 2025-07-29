@@ -320,7 +320,7 @@ class Node:
         ports: Union[List[int], Dict[str, Tuple[str, int]]] = [],
         force: bool = False,
         command: Optional[Union[Command, FakeCommand]] = None,
-    ):
+    ) -> bool:
         """Runs a container in the node, in detached mode.
 
         Parameters
@@ -374,7 +374,7 @@ class Node:
 
         if (await self.is_container_running(name)) and not force:
             command.debug(text=f"{self.name}: container already running.")
-            return
+            return True
 
         await self.stop_container(name, image, force=force, command=command)
 
@@ -416,7 +416,7 @@ class Node:
         await self._run(self.client.images.pull, image)
 
         command.info(text=f"{self.name}: running {name} from {image}.")
-        container = await self._run(
+        await self._run(
             self.client.containers.run,
             image,
             name=name,
@@ -435,7 +435,7 @@ class Node:
             devices=devices,
         )
 
-        return container
+        return True
 
     async def create_volume(
         self,
