@@ -1,5 +1,18 @@
 # Changelog
 
+## Next release
+
+### 🔥 Breaking Changes
+
+* Require Python 3.10 or later.
+
+### ⚙️ Engineering
+
+* Use `uv` for package management.
+* Support Python 3.13.
+* Update workflows.
+
+
 ## 0.5.0 - December 22, 2023
 
 ### 🔧 Fixed
