@@ -141,6 +141,7 @@ async def reconnect(
     for node in c_nodes:
         container_name = config["container_name"] + f"-{node.name}"
         if not (await node.is_container_running(container_name)):
+            command.error(error=f"{node.name}: container is not running")
             continue
 
         device = command.actor.flicameras[node.name]
@@ -307,7 +308,11 @@ async def talk(
     for name in connected_nodes:
         dev_commands.append(flicameras[name].send_message(command, camera_command))
 
-    await asyncio.gather(*dev_commands, return_exceptions=True)
+    results = await asyncio.gather(*dev_commands, return_exceptions=True)
+    for ii, result in enumerate(results):
+        if isinstance(result, Exception):
+            command.error(f"Failed sending command to {connected_nodes[ii]}: {result}")
+            continue
 
     # Check if the device commands returned "filename" keywords. If so,
     # bundle them in a single keyword list that indicates all the filenames
