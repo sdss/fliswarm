@@ -1649,7 +1649,7 @@ wheels = [
 
 [[package]]
 name = "sdss-fliswarm"
-version = "0.6.0"
+version = "0.6.1a1"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
