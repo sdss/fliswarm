@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 0.6.0 - July 29, 2025
 
 ### 🔥 Breaking Changes
 
