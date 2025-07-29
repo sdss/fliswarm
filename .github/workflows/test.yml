@@ -11,8 +11,11 @@ on:
       - 'docs/**'
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+
+    env:
+      OBSERVATORY: APO
 
     strategy:
       fail-fast: false
