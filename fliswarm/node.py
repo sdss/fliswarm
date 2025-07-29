@@ -120,7 +120,7 @@ class Node:
 
         return False
 
-    async def ping(self, timeout=0.5) -> bool:
+    async def ping(self, timeout=2) -> bool:
         """Pings the node. Returns `True` if the node is responding."""
 
         try:
