@@ -68,7 +68,9 @@ Both the manager and node computers require a bit of special configuration befor
     "hosts": ["tcp://0.0.0.0:2375", "unix:///var/run/docker.sock"]
   }
 
-Then create the file ``/etc/systemd/system/docker.service.d/docker.conf`` with content ::
+Then create the file ``/etc/systemd/system/docker.service.d/docker.conf`` with content
+
+.. code-block:: ini
 
   [Service]
   ExecStart=

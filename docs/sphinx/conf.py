@@ -1,7 +1,5 @@
 import os
 
-from pkg_resources import parse_version
-
 from fliswarm import __version__
 
 
@@ -46,8 +44,6 @@ author = "José Sánchez-Gallego"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-# The short X.Y version.
-version = parse_version(__version__).base_version
 # The full version, including alpha/beta/rc tags.
 release = __version__
 
@@ -56,7 +52,7 @@ release = __version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -105,10 +101,13 @@ intersphinx_mapping = {
 autodoc_mock_imports = ["_tkinter"]
 autodoc_member_order = "groupwise"
 autodoc_default_options = {"members": None, "show-inheritance": None}
-autodoc_typehints = "description"
+# autodoc_typehints = "description"
 
-napoleon_use_rtype = False
-napoleon_use_ivar = True
+simplify_optional_unions = True
+typehints_use_signature_return = True
+
+# napoleon_use_rtype = False
+# napoleon_use_ivar = True
 
 copybutton_prompt_text = r">>> |\$ "
 copybutton_prompt_is_regexp = True
