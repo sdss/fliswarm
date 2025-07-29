@@ -1,6 +1,6 @@
 [project]
 name = "sdss-fliswarm"
-version = "0.5.1a0"
+version = "0.6.0a0"
 description = "A tool to create and manage Docker instances of flicamera"
 authors = [
     { name = "José Sánchez-Gallego", email = "gallegoj@uw.edu" }
