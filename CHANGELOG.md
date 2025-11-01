@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### ✨ Improved
+
+* Allow multiple retries when reconnecting a device.
+
+
 ## 0.6.0 - July 29, 2025
 
 ### 🔥 Breaking Changes

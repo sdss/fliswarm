@@ -6,6 +6,7 @@
 # @Filename: device.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import json
 
 from typing import TYPE_CHECKING, Dict, Optional
@@ -51,7 +52,15 @@ class FlicameraDevice(Device):
             except (ConnectionResetError, OSError):
                 pass
 
-        await self.start()
+        for ii in range(3):
+            try:
+                await self.start()
+            except Exception:
+              if ii == 2:
+                raise
+              await asyncio.sleep(3)
+            else:
+                break
 
     def send_message(
         self,
