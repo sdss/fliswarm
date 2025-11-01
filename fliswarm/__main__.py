@@ -12,7 +12,7 @@ import warnings
 import click
 from click_default_group import DefaultGroup
 
-from sdsstools.configuration import read_yaml_file
+from sdsstools.configuration import Configuration, read_yaml_file
 from sdsstools.daemonizer import DaemonGroup, cli_coro
 
 from fliswarm.actor import FLISwarmActor
@@ -62,7 +62,7 @@ async def actor(obj):
         config = os.path.join(cdir, "etc/fliswarm.yaml")
 
     if obj["nodes"] is not None:
-        config = read_yaml_file(config)
+        config = read_yaml_file(config, return_class=Configuration)
         config["enabled_nodes"][observatory] = obj["nodes"]
 
     actor = await FLISwarmActor.from_config(config).start()
