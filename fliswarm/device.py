@@ -56,9 +56,9 @@ class FlicameraDevice(Device):
             try:
                 await self.start()
             except Exception:
-              if ii == 2:
-                raise
-              await asyncio.sleep(3)
+                if ii == 2:
+                    raise
+                await asyncio.sleep(3)
             else:
                 break
 
