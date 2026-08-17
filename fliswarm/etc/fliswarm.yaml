@@ -27,6 +27,8 @@ nodes:
       host: sdss-gfa1
       port: 19995
       docker-client: tcp://sdss-gfa1:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: gfa
       power:
         device: nuc1
@@ -35,6 +37,8 @@ nodes:
       host: sdss-gfa2
       port: 19995
       docker-client: tcp://sdss-gfa2:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: gfa
       power:
         device: nuc2
@@ -43,6 +47,8 @@ nodes:
       host: sdss-gfa3
       port: 19995
       docker-client: tcp://sdss-gfa3:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: gfa
       power:
         device: nuc3
@@ -51,6 +57,8 @@ nodes:
       host: sdss-gfa4
       port: 19995
       docker-client: tcp://sdss-gfa4:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: gfa
       power:
         device: nuc4
@@ -59,6 +67,8 @@ nodes:
       host: sdss-gfa5
       port: 19995
       docker-client: tcp://sdss-gfa5:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: gfa
       power:
         device: nuc5
@@ -67,6 +77,8 @@ nodes:
       host: sdss-gfa6
       port: 19995
       docker-client: tcp://sdss-gfa6:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: gfa
       power:
         device: gfa6
@@ -75,6 +87,8 @@ nodes:
       host: sdss-fvc
       port: 19995
       docker-client: tcp://sdss-fvc:2375
+      docker-uid: 2005
+      docker-gid: 3005
       category: fvc
       power:
         device: fvc

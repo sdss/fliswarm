@@ -13,7 +13,7 @@ import glob as globlib
 import itertools
 import random as randomlib
 
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 import click
 
@@ -78,6 +78,8 @@ async def reconnect(
         actor = command.actor
         assert actor
 
+        node_config: dict[str, Any] = config["nodes"][actor.observatory][node.name]
+
         try:
             await node.connect()
             if not (await node.connected()):
@@ -109,14 +111,22 @@ async def reconnect(
                 command=command,
             )
 
+        user: str | None = None
+        if "docker-uid" in node_config:
+            user = str(node_config["docker-uid"])
+            if "docker-gid" in node_config:
+                gid = node_config["docker-gid"]
+                user += f":{gid}"
+
         return await node.run_container(
             actor.get_container_name(node),
             config["image"],
             volumes=list(config["volumes"]),
             privileged=True,
             registry=config["registry"],
-            ports=[config["nodes"][actor.observatory][node.name]["port"]],
+            ports=[node_config["port"]],
             envs={"ACTOR_NAME": node.name, "OBSERVATORY": actor.observatory},
+            user=user,
             force=True,
             command=command,
         )

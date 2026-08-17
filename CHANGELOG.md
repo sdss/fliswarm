@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * Improve handling of network mode and ports when creating a container.
+* Support setting UID and GID in container.
 
 ### 🔧 Fixed
 

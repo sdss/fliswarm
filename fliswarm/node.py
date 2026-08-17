@@ -325,6 +325,7 @@ class Node:
         registry: Optional[Any] = None,
         envs: Dict[str, Any] = {},
         ports: Union[List[int], Dict[str, Tuple[str, int]]] = [],
+        user: str | None = None,
         force: bool = False,
         command: Optional[Union[Command, FakeCommand]] = None,
     ) -> bool:
@@ -357,6 +358,8 @@ class Node:
             container as port 3333 on the node. Also accepted is a list of
             integers; each integer port will be exposed in the container
             and bound to the same port in the node.
+        user
+            The ``UID:GID`` user/group to run the container as.
         force
             If `True`, removes any running containers of the same name,
             or any container with the same image as ancestor.
@@ -443,6 +446,7 @@ class Node:
             stdout=False,
             network=network,
             devices=devices,
+            user=user,
             ports=ports if network != "host" else None,
         )
 
