@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from functools import partial
 
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
@@ -123,12 +124,17 @@ class Node:
     async def ping(self, timeout=2) -> bool:
         """Pings the node. Returns `True` if the node is responding."""
 
+        observatory = os.environ.get("OBSERVATORY", "APO").upper()
+
+        # APO and LCO have different flavours of ping.
+        if observatory == "APO":
+            ping_cmd = f"ping -c 1 -W {timeout} {self.addr}"
+        else:
+            ping_cmd = f"ping -c 1 -w {timeout} {self.addr}"
+
         try:
             ping = await asyncio.wait_for(
-                subprocess_run_async(
-                    f"ping -c 1 -w {timeout} {self.addr}",
-                    shell=True,
-                ),
+                subprocess_run_async(ping_cmd, shell=True),
                 timeout,
             )
             return True if ping.returncode == 0 else False

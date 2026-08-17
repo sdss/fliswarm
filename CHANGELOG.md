@@ -6,6 +6,10 @@
 
 * Improve handling of network mode and ports when creating a container.
 
+### 🔧 Fixed
+
+* Support different flavours of `ping` at APO and LCO.
+
 
 ## 0.6.1 - November 1, 2025
 
