@@ -315,6 +315,7 @@ class Node:
         image: str,
         volumes: List[Any] = [],
         privileged: bool = False,
+        network: str = "host",
         registry: Optional[Any] = None,
         envs: Dict[str, Any] = {},
         ports: Union[List[int], Dict[str, Tuple[str, int]]] = [],
@@ -335,6 +336,9 @@ class Node:
             in the node Docker engine.
         privileged
             Whether to run the container in privileged mode.
+        network
+            Network mode. Defaults to ``"host"``, which uses the host computer
+            network. In this case, ``ports`` are ignored.
         registry
             The registry from which to pull the image, if it doesn't exist
             locally.
@@ -431,8 +435,9 @@ class Node:
             mounts=mounts,
             stdin_open=False,
             stdout=False,
-            network="host",
+            network=network,
             devices=devices,
+            ports=ports if network != "host" else None,
         )
 
         return True

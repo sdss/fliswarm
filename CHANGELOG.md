@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### ✨ Improved
+
+* Improve handling of network mode and ports when creating a container.
+
+
 ## 0.6.1 - November 1, 2025
 
 ### ✨ Improved
